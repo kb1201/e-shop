@@ -1,0 +1,29 @@
+name: infra
+
+services:
+  db:
+    image: postgres:14.5
+    container_name: db
+    restart: unless-stopped
+    ports:
+      - "45432:5432"
+    command: [ 'postgres', '-c', 'log_statement=all', '-c', 'max_connections=500', '-c', 'listen_addresses=0.0.0.0' ]
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: changeme
+      POSTGRES_DB: postgres
+      POSTGRES_MULTIPLE_DATABASES: catalog,inventory,ordering
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ./db/create-dbs.sh:/docker-entrypoint-initdb.d/create-dbs.sh
+      - ./db/amazon_for_db.csv:/tmp/amazon_for_db.csv
+    networks:
+      local_network:
+
+networks:
+  local_network:
+    name: local_network
+    driver: bridge
+
+volumes:
+  pg-data:
