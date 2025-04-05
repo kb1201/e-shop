@@ -19,6 +19,44 @@ services:
       - ./db/amazon_for_db.csv:/tmp/amazon_for_db.csv
     networks:
       local_network:
+    
+  keycloak_web:
+    image: quay.io/keycloak/keycloak:23.0.7
+    container_name: keycloak_web
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://keycloakdb:5433/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_PORT: 48080
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+
+      KC_LOG_LEVEL: info
+      KC_METRICS_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: start-dev
+    depends_on:
+      - keycloakdb
+    ports:
+      - 48080:8080
+
+  keycloakdb:
+    image: postgres:15
+    container_name: keycloakdb
+    volumes:
+      - postgres_data:/var/lib/postgresql/data2
+    ports:
+      - "45433:5433"
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+      PGPORT: 5433 
 
 networks:
   local_network:
@@ -27,3 +65,4 @@ networks:
 
 volumes:
   pg-data:
+  postgres_data:

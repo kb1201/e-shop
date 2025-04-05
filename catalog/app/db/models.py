@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, DECIMAL, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DECIMAL, Text
 from .database import Base
 
 class Product(Base):
@@ -19,4 +19,3 @@ class Product(Base):
     combined_text = Column(Text)
     image_name = Column(String(255))
     image_path = Column(Text)
-
