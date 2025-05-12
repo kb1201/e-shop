@@ -1,0 +1,32 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:45432/user_service
+    username: user_service
+    password: changeme
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  sql:
+    init:
+      platform: postgres
+  security:
+    user:
+      name: admin
+      password: password
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: user_service
+    liquibase-schema: user_service
+    database-change-log-table: databasechangelog
+    database-change-log-lock-table: databasechangeloglock
+
+
+security:
+  jwt:
+    private-key-path: classpath:private.pem
+    public-key-path: classpath:public.pem
+    expiration-time: 3600000

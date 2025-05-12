@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - include:
+      file: classpath:db/changelog/002-create-products-table.xml
+  - include:
+      file: classpath:db/changelog/004-fill-products.xml
+  - include:
+      file: classpath:db/changelog/005-create-index.xml

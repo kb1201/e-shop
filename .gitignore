@@ -1,0 +1,45 @@
+# === GLOBAL ===
+*.log
+*.tmp
+*.swp
+.DS_Store
+Thumbs.db
+.env
+.env.*
+
+# === JAVA / SPRING BOOT ===
+**/target/
+**/.mvn/
+**/.classpath
+**/.project
+**/.settings/
+**/*.iml
+**/build/
+**/out/
+
+# === MAVEN / GRADLE WRAPPERS ===
+**/mvnw
+**/mvnw.cmd
+**/gradlew
+**/gradlew.bat
+**/gradle/
+
+# === NODE / REACT / FRONTEND ===
+**/node_modules/
+**/dist/
+**/build/
+**/.next/
+**/.turbo/
+**/.eslintcache
+
+# === IDE / EDITORS ===
+**/.idea/
+**/.vscode/
+**/.metadata/
+*.sublime-workspace
+*.sublime-project
+
+# === OS FILES ===
+ehthumbs.db
+Icon?
+Desktop.ini

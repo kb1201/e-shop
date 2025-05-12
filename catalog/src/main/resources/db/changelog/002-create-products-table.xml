@@ -1,0 +1,35 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+        http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+    <changeSet id="002-create-products" author="kbosnjak">
+        <createTable tableName="products" schemaName="catalog">
+            <column name="id" type="SERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(500)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(400)">
+            </column>
+            <column name="specific_category" type="VARCHAR(60)">
+            </column>
+            <column name="discounted_price" type="DECIMAL(10,2)"/>
+            <column name="actual_price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="discount_percentage" type="DECIMAL(5,2)"/>
+            <column name="rating" type="DECIMAL(3,2)"/>
+            <column name="rating_count" type="INT"/>
+            <column name="about_product" type="TEXT"/>
+            <column name="img_link" type="TEXT"/>
+            <column name="product_link" type="TEXT"/>
+            <column name="combined_text" type="TEXT"/>
+            <column name="image_name" type="TEXT"/>
+            <column name="image_path" type="TEXT"/>
+        </createTable>
+    </changeSet>
+</databaseChangeLog>

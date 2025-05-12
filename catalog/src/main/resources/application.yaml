@@ -1,0 +1,45 @@
+server:
+  port: 8081
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:45432/catalog
+    username: catalog
+    password: changeme
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  sql:
+    init:
+      platform: postgres
+  security:
+    user:
+      name: admin
+      password: password
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: catalog
+    liquibase-schema: catalog
+    database-change-log-table: databasechangelog
+    database-change-log-lock-table: databasechangeloglock
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  jvm:
+    args: -Xmx4g
+
+kafka:
+  topic:
+    orders: orders
+  group:
+    id: recommendation-service
+
+security:
+  jwt:
+    public-key-path: classpath:public.pem
