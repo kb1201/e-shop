@@ -1,0 +1,51 @@
+server:
+  port: 8082
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:45432/shipment
+    username: shipment
+    password: changeme
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  sql:
+    init:
+      platform: postgres
+  security:
+    user:
+      name: admin
+      password: password
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: shipment
+    liquibase-schema: shipment
+    database-change-log-table: databasechangelog
+    database-change-log-lock-table: databasechangeloglock
+  kafka:
+    bootstrap-servers: localhost:19093
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      topic: shipment-status-updates
+
+    consumer:
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      group-id: shipment-group
+      topic: shipment-events
+      properties:
+        spring.json.trusted.packages: "*"
+
+    listener:
+      ack-mode: record
+  jvm:
+    args: -Xmx4g
+
+security:
+  jwt:
+    public-key-path: classpath:public.pem

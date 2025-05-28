@@ -1,11 +1,13 @@
 package hr.fer.dipl.service;
 
+import hr.fer.dipl.db.model.User;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -44,11 +46,31 @@ public class JwtService {
         return claimsResolver.apply(claims);
     }
 
+    public List<String> extractRoles(String token) {
+        Claims claims = extractAllClaims(token);
+        Object rolesObject = claims.get("roles");
+        if (rolesObject instanceof List<?>) {
+            return ((List<?>) rolesObject).stream()
+                    .filter(item -> item instanceof String)
+                    .map(String.class::cast)
+                    .toList();
+        }
+        return List.of();
+    }
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
 
     public String generateToken(Map<String, Object> extraClaims, UserDetails userDetails) {
+        extraClaims.put("roles", userDetails.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .toList());
+
+        // Assuming your UserDetails implementation has getId()
+        if (userDetails instanceof User customUser) {
+            extraClaims.put("userId", customUser.getId());
+        }
+
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 

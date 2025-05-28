@@ -1,0 +1,73 @@
+server:
+  port: 8084
+debug:
+  true
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:45432/ordering
+    username: ordering
+    password: changeme
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  sql:
+    init:
+      platform: postgres
+  security:
+    user:
+      name: admin
+      password: password
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+    default-schema: ordering
+    liquibase-schema: ordering
+    database-change-log-table: databasechangelog
+    database-change-log-lock-table: databasechangeloglock
+  kafka:
+    bootstrap-servers: localhost:19093
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.LongSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+
+    consumer:
+      topic: shipment-status-updates
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "*"
+      group-id: shipment-group
+    listener:
+      concurrency: 3
+      ack-mode: record
+
+
+custom:
+  kafka:
+    shipment:
+      topic: shipment-events
+      acks: all
+      retries: 3
+      linger-ms: 1
+      idempotence: true
+
+    recommendation:
+      topic: recommendation-events
+      acks: 0
+      retries: 0
+      linger-ms: 0
+      idempotence: false
+
+inventory-service:
+  url: "http://localhost:8083"
+
+catalog-service:
+    url: "http://localhost:8081"
+
+security:
+  jwt:
+    public-key-path: "classpath:public.pem"

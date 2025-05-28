@@ -1,9 +1,12 @@
 package hr.fer.dipl.mapper;
 
+import hr.fer.dipl.db.model.Role;
 import hr.fer.dipl.db.model.User;
 import hr.fer.dipl.dto.UserRequest;
 import hr.fer.dipl.dto.UserResponse;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+
+import java.util.HashSet;
 
 public class UserMapper {
     private static final BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();

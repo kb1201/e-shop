@@ -18,6 +18,19 @@ const ProductCard = ({product, addToCart}) => {
         setAdded(true);
     };
 
+//     function encodeGitHubRawURL(originalURL) {
+//         console.log("AAAAA")
+//         // Split the URL into parts
+//         const parts = originalURL.split('/');
+// // Encode the last part (filename) separately
+// // Reconstruct the URL with the encoded filename
+//         parts[parts.length - 1] = parts[parts.length - 1]
+//             .split(',')
+//             .map(part => encodeURIComponent(part.trim()))
+//             .join(',');
+//         return parts.join('/');
+//     }
+
     return (
         <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-xl transition-shadow duration-300">
             <div className="relative h-48 overflow-hidden">

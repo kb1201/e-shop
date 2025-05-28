@@ -7,6 +7,8 @@ import Home from './Home';
 import './index.css';
 import ProductList from "./product/ProductList";
 import CartPage from "./cart/CartPage";
+import OrderHistory from "./order/OrderHistory";
+import ShipmentAdmin from "./shipment/Shipment";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -24,7 +26,9 @@ function App() {
                 <Route path="/login" element={<Login setUser={setUser}/>}/>
                 <Route path="/register" element={<Register/>}/>
                 <Route path="/products" element={<ProductList/>}/>
-                <Route path="/cart" element={<CartPage />} />
+                <Route path="/orders" element={<OrderHistory/>}/>
+                <Route path="/cart" element={<CartPage/>}/>
+                <Route path="/shipments" element={<ShipmentAdmin/>}/>
             </Routes>
         </Router>
     );

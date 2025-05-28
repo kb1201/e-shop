@@ -74,6 +74,7 @@ public class JwtService {
         return KeyFactory.getInstance("RSA").generatePublic(keySpec);
     }
 
+
     public Collection<? extends GrantedAuthority> getAuthorities(Claims claims) {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
@@ -86,19 +87,7 @@ public class JwtService {
                     authorities.add(new SimpleGrantedAuthority("ROLE_" + role));
                 }
             }
-            // Try to get from "authorities" claim
-            else if (claims.get("authorities") instanceof List) {
-                List<String> roles = (List<String>) claims.get("authorities");
-                for (String role : roles) {
-                    authorities.add(new SimpleGrantedAuthority(role));
-                }
-            }
-            // Try to get from "scope" claim (OAuth2 format)
-            else if (claims.get("scope") instanceof String scope) {
-                for (String authority : scope.split(" ")) {
-                    authorities.add(new SimpleGrantedAuthority(authority));
-                }
-            }
+
         } catch (Exception e) {
             // Fallback to empty authorities if extraction fails
             e.printStackTrace();

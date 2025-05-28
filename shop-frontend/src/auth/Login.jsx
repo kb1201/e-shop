@@ -1,11 +1,11 @@
-import React, { useContext, useState } from 'react';
-import { AuthContext } from './AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { userApi } from "../api";
+import React, {useContext, useState} from 'react';
+import {AuthContext} from './AuthContext';
+import {useNavigate} from 'react-router-dom';
+import {userApi} from "../api";
 
 const Login = () => {
     const navigate = useNavigate();
-    const { login } = useContext(AuthContext);
+    const {login} = useContext(AuthContext);
     const [formData, setFormData] = useState({
         username: '',
         password: ''
@@ -14,12 +14,22 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
-        const { name, value } = e.target;
+        const {name, value} = e.target;
         setFormData({
             ...formData,
             [name]: value
         });
     };
+
+    function parseJwt(token) {
+        try {
+            const base64Payload = token.split('.')[1];
+            const payload = atob(base64Payload);
+            return JSON.parse(payload);
+        } catch (e) {
+            return null;
+        }
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -28,11 +38,19 @@ const Login = () => {
 
         try {
             const response = await userApi.post('/users/login', formData);
-            const { token, id: userId } = response.data;
-
+            const {token, id: userId} = response.data;
+            console.log(token)
             if (token && userId !== undefined) {
-                login({ token, userId });
-                navigate('/');
+                let roles = parseJwt(token).roles
+                console.log(roles)
+                if (roles && roles.length !== 0) {
+                    let role = roles[0]
+                    login({token, userId, role});
+                    navigate('/');
+                } else {
+                    setError('Login failed. Please check your credentials.');
+                }
+
             } else {
                 setError('Login failed. Please check your credentials.');
             }
@@ -67,7 +85,9 @@ const Login = () => {
                             <div className="flex">
                                 <div className="flex-shrink-0">
                                     <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                        <path fillRule="evenodd"
+                                              d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                              clipRule="evenodd"/>
                                     </svg>
                                 </div>
                                 <div className="ml-3">
@@ -147,9 +167,12 @@ const Login = () => {
                                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
                             >
                                 {isLoading ? (
-                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                                         xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                                strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor"
+                                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                     </svg>
                                 ) : null}
                                 Sign in

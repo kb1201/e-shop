@@ -28,12 +28,13 @@ public class ProductService {
                 .map(ProductMapper::toDTO);
     }
 
-    public Page<Product> searchProducts(String query, Pageable pageable) {
+    public Page<ProductDTO> searchProducts(String query, Pageable pageable) {
         if (query == null || query.isEmpty()) {
             throw new IllegalArgumentException("Query must not be empty");
         }
-        return productRepository.findByNameContainingIgnoreCase(query, pageable);
+        var products = productRepository.findByNameContainingIgnoreCase(query, pageable);
 
+        return products.map(ProductMapper::toDTO);
     }
 
     public List<ProductDTO> getProductsByIds(List<Integer> ids) {
@@ -42,9 +43,12 @@ public class ProductService {
                 .toList();
     }
 
-    public Page<Product> getMostPopularProducts(int page, int size) {
+    public Page<ProductDTO> getMostPopularProducts(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         // Choose one of the methods depending on your popularity definition
-        return productRepository.findMostPopularByRating(pageable);
+        var products = productRepository.findMostPopularByRating(pageable);
+        // Map the list of products to a list of ProductDTO
+
+        return products.map(ProductMapper::toDTO);
     }
 }

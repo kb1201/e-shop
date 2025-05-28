@@ -36,7 +36,7 @@ public class ProductController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<Page<Product>> searchProducts(
+    public ResponseEntity<Page<ProductDTO>> searchProducts(
             @RequestParam(value = "q", required = false) String query,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size) {
@@ -45,20 +45,20 @@ public class ProductController {
         Pageable pageable = PageRequest.of(page, size);
 
         // Call the service to get paginated results
-        Page<Product> productPage = productService.searchProducts(query, pageable);
+        var productPage = productService.searchProducts(query, pageable);
 
         return ResponseEntity.ok(productPage);
     }
 
-    // Get products by a list of IDs
-    @GetMapping("/by_ids")
-    public ResponseEntity<List<ProductDTO>> getProductsByIds(@RequestParam("ids") List<Integer> ids) {
-        List<ProductDTO> products = productService.getProductsByIds(ids);
-        return ResponseEntity.ok(products);
-    }
+//    // Get products by a list of IDs
+//    @GetMapping("/id")
+//    public ResponseEntity<List<ProductDTO>> getProductsByIds(@RequestParam("ids") List<Integer> ids) {
+//        List<ProductDTO> products = productService.getProductsByIds(ids);
+//        return ResponseEntity.ok(products);
+//    }
 
     @GetMapping("/popular")
-    public ResponseEntity<Page<Product>> getPopularProducts(
+    public ResponseEntity<Page<ProductDTO>> getPopularProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         return ResponseEntity.ok(productService.getMostPopularProducts(page, size));

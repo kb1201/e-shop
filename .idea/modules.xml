@@ -4,7 +4,9 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/catalog.main.iml" filepath="$PROJECT_DIR$/.idea/modules/catalog.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/e-shop.iml" filepath="$PROJECT_DIR$/.idea/e-shop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/inventory.main.iml" filepath="$PROJECT_DIR$/.idea/modules/inventory.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/ordering.main.iml" filepath="$PROJECT_DIR$/.idea/modules/ordering.main.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/shipment.main.iml" filepath="$PROJECT_DIR$/.idea/modules/shipment.main.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/user.main.iml" filepath="$PROJECT_DIR$/.idea/modules/user.main.iml" />
     </modules>
   </component>
