@@ -9,25 +9,51 @@ const ShipmentAdmin = () => {
     const [editingStatus, setEditingStatus] = useState(false);
     const [newStatus, setNewStatus] = useState('');
     const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [page, setPage] = useState(0); // page is zero-based
+    const [totalPages, setTotalPages] = useState(1);
+    const pageSize = 10;
+    const [totalElements, setTotalElements] = useState(0);
 
     useEffect(() => {
-        fetchShipments();
-    }, []);
+        fetchShipments(page);
+    }, [page]);
 
-    const fetchShipments = async () => {
+    const isStatusFinal = (status) => {
+        return status === 'DELIVERED' || status === 'REJECTED';
+    };
+
+    const getAvailableStatusOptions = (currentStatus) => {
+        const allStatuses = ['CREATED', 'IN_DELIVERY', 'DELIVERED', 'REJECTED'];
+
+        // If current status is final, no changes allowed
+        if (isStatusFinal(currentStatus)) {
+            return [currentStatus]; // Only show current status
+        }
+
+        if (currentStatus === 'IN_DELIVERY')
+            return ['IN_DELIVERY', 'DELIVERED', 'REJECTED'];
+
+        // For non-final statuses, allow all transitions
+        // You can add more specific business rules here if needed
+        return allStatuses;
+    };
+
+    const fetchShipments = async (pageNumber = 0) => {
         setLoading(true);
         try {
             const response = await shipmentApi.get('/shipments', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`, // Adjust based on your auth
-                    'Content-Type': 'application/json'
+                params: {
+                    page: pageNumber,
+                    size: pageSize
                 }
             });
 
-
             const data = response.data;
-            setShipments(data);
+            setShipments(data.content);
+            setPage(data.number);
+            setTotalPages(data.totalPages);
             setError(null);
+            setTotalElements(data.totalElements);
         } catch (err) {
             setError('Failed to fetch shipments');
             console.error('Error fetching shipments:', err);
@@ -38,7 +64,7 @@ const ShipmentAdmin = () => {
 
     const fetchShipmentDetails = async (shipmentId) => {
         try {
-            const response = await shipmentApi.get(`/api/shipments/${shipmentId}`, {
+            const response = await shipmentApi.get(`/shipments/${shipmentId}`, {
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`,
                     'Content-Type': 'application/json'
@@ -56,20 +82,18 @@ const ShipmentAdmin = () => {
     const updateShipmentStatus = async (shipmentId, status) => {
         setUpdatingStatus(true);
         try {
-            const response = await shipmentApi.patch(`/shipments/${shipmentId}/status`, {
-                method: 'PATCH',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({status})
-            });
+            // Fixed: Use proper axios API call instead of mixing fetch and axios
+            const response = await shipmentApi.patch(`/shipments/${shipmentId}/status`,
+                {status}, // Send status in request body
+                {
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
+                        'Content-Type': 'application/json'
+                    }
+                }
+            );
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            const updatedShipment = await response.json();
+            const updatedShipment = response.data;
 
             // Update shipments list
             setShipments(prev => prev.map(shipment =>
@@ -83,6 +107,11 @@ const ShipmentAdmin = () => {
 
             setEditingStatus(false);
             setNewStatus('');
+            setError(null); // Clear any previous errors
+
+            // Show success message (optional)
+            console.log('Shipment status updated successfully');
+
         } catch (err) {
             setError('Failed to update shipment status');
             console.error('Error updating shipment status:', err);
@@ -97,6 +126,16 @@ const ShipmentAdmin = () => {
             IN_DELIVERY: 'bg-indigo-100 text-indigo-800 border-indigo-200',
             DELIVERED: 'bg-green-100 text-green-800 border-green-200',
             REJECTED: 'bg-red-100 text-red-800 border-red-200'
+        };
+        return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
+    };
+
+    const getOrderStatusColor = (status) => {
+        const colors = {
+            PROCESSING: 'bg-blue-100 text-blue-800 border-blue-200',
+            SHIPPED: 'bg-purple-100 text-purple-800 border-purple-200',
+            DELIVERED: 'bg-green-100 text-green-800 border-green-200',
+            CANCELLED: 'bg-red-100 text-red-800 border-red-200'
         };
         return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
     };
@@ -117,7 +156,8 @@ const ShipmentAdmin = () => {
         return status?.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase()) || 'Unknown';
     };
 
-    const statusOptions = [
+    // Available shipment statuses that admin can set
+    const shipmentStatusOptions = [
         'CREATED', 'IN_DELIVERY', 'DELIVERED', 'REJECTED',
     ];
 
@@ -132,12 +172,30 @@ const ShipmentAdmin = () => {
     };
 
     const handleStatusSave = () => {
-        if (newStatus && selectedShipment) {
+        if (newStatus && selectedShipment && newStatus !== selectedShipment.status) {
             updateShipmentStatus(selectedShipment.id, newStatus);
+        } else {
+            // No change, just cancel editing
+            handleStatusCancel();
         }
     };
 
-    if (loading && !shipments.length) {
+    // Fixed: Use proper numeric values for page navigation
+    const handlePreviousPage = () => {
+        const newPage = Math.max(page - 1, 0);
+        setPage(newPage);
+    };
+
+    const handleNextPage = () => {
+        const newPage = Math.min(page + 1, totalPages - 1);
+        setPage(newPage);
+    };
+
+    const handleRefresh = () => {
+        fetchShipments(page);
+    };
+
+    if (loading && !totalElements) {
         return (
             <div className="p-8 flex items-center justify-center">
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -153,7 +211,7 @@ const ShipmentAdmin = () => {
                     {error}
                 </div>
                 <button
-                    onClick={fetchShipments}
+                    onClick={handleRefresh}
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center"
                 >
                     <span className="mr-2">🔄</span>
@@ -163,13 +221,13 @@ const ShipmentAdmin = () => {
         );
     }
 
-    if (shipments.length === 0) {
+    if (totalElements === 0) {
         return (
             <div className="p-8 text-center">
                 <div className="w-12 h-12 bg-gray-200 rounded"/>
                 <p className="text-gray-500">No shipments found</p>
                 <button
-                    onClick={fetchShipments}
+                    onClick={handleRefresh}
                     className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center mx-auto"
                 >
                     <span className="mr-2">🔄</span>
@@ -187,10 +245,10 @@ const ShipmentAdmin = () => {
                         <span className="mr-2">🚚</span>
                         Shipment Management
                     </h1>
-                    <p className="text-gray-600 mt-1">Manage and track all shipments ({shipments.length} total)</p>
+                    <p className="text-gray-600 mt-1">Manage and track all shipments ({totalElements} total)</p>
                 </div>
                 <button
-                    onClick={fetchShipments}
+                    onClick={handleRefresh}
                     disabled={loading}
                     className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50 flex items-center"
                 >
@@ -221,10 +279,18 @@ const ShipmentAdmin = () => {
                                                 <p className="text-sm text-gray-600">Order: #{shipment.order.id}</p>
                                             )}
                                         </div>
-                                        <span
-                                            className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(shipment.status)}`}>
-                                            {formatStatusForDisplay(shipment.status)}
-                                        </span>
+                                        <div className="flex flex-col items-end space-y-1">
+                                            <span
+                                                className={`px-2 py-1 text-xs font-medium rounded-full border ${getStatusColor(shipment.status)}`}>
+                                                {formatStatusForDisplay(shipment.status)}
+                                            </span>
+                                            {shipment.order?.status && (
+                                                <span
+                                                    className={`px-2 py-1 text-xs font-medium rounded-full border ${getOrderStatusColor(shipment.order.status)}`}>
+                                                    Order: {formatStatusForDisplay(shipment.order.status)}
+                                                </span>
+                                            )}
+                                        </div>
                                     </div>
 
                                     <div className="space-y-1 text-sm text-gray-600">
@@ -242,6 +308,32 @@ const ShipmentAdmin = () => {
                                 </div>
                             ))}
                         </div>
+
+                        {/* Fixed: Moved pagination outside of the shipment list and fixed the handlers */}
+                        <div className="px-4 py-4 border-t bg-gray-50">
+                            <div className="flex justify-center items-center space-x-4">
+                                <button
+                                    onClick={handlePreviousPage}
+                                    disabled={page === 0}
+                                    className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition"
+                                >
+                                    ← Previous
+                                </button>
+
+                                <span className="text-sm text-gray-600">
+                                    Page <span className="font-medium text-gray-900">{page + 1}</span> of <span
+                                    className="font-medium text-gray-900">{totalPages}</span>
+                                </span>
+
+                                <button
+                                    onClick={handleNextPage}
+                                    disabled={page >= totalPages - 1}
+                                    className="px-4 py-2 rounded-xl border border-gray-300 bg-white text-gray-700 hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition"
+                                >
+                                    Next →
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -256,10 +348,11 @@ const ShipmentAdmin = () => {
                                             Shipment #{selectedShipment.id}
                                         </h3>
                                         {selectedShipment.order && (
-                                            <p className="text-gray-600">Order #{selectedShipment.order.id}</p>
+                                            <p className="text-gray-600">Order #{selectedShipment.order.orderId}</p>
                                         )}
                                     </div>
-                                    <div className="flex items-center space-x-2">
+                                    <div className="flex flex-col items-end space-y-2">
+                                        {/* Shipment Status */}
                                         {editingStatus ? (
                                             <div className="flex items-center space-x-2">
                                                 <select
@@ -268,7 +361,7 @@ const ShipmentAdmin = () => {
                                                     className="px-3 py-1 border rounded text-sm"
                                                     disabled={updatingStatus}
                                                 >
-                                                    {statusOptions.map(status => (
+                                                    {getAvailableStatusOptions(selectedShipment.status).map(status => (
                                                         <option key={status} value={status}>
                                                             {formatStatusForDisplay(status)}
                                                         </option>
@@ -276,33 +369,52 @@ const ShipmentAdmin = () => {
                                                 </select>
                                                 <button
                                                     onClick={handleStatusSave}
-                                                    disabled={updatingStatus}
+                                                    disabled={updatingStatus || isStatusFinal(selectedShipment.status)}
                                                     className="p-1 text-green-600 hover:bg-green-50 rounded disabled:opacity-50"
+                                                    title="Save Status"
                                                 >
-                                                    <span>✔️</span>
+                                                    {updatingStatus ? '⏳' : '✅'}
                                                 </button>
                                                 <button
                                                     onClick={handleStatusCancel}
                                                     disabled={updatingStatus}
                                                     className="p-1 text-red-600 hover:bg-red-50 rounded disabled:opacity-50"
+                                                    title="Cancel"
                                                 >
-                                                    <X className="w-4 h-4"/>
+                                                    ❌
                                                 </button>
                                             </div>
                                         ) : (
                                             <div className="flex items-center space-x-2">
                                                 <span
                                                     className={`px-3 py-1 text-sm font-medium rounded-full border ${getStatusColor(selectedShipment.status)}`}>
-                                                    {formatStatusForDisplay(selectedShipment.status)}
+                                                    Shipment: {formatStatusForDisplay(selectedShipment.status)}
                                                 </span>
-                                                <button
-                                                    onClick={() => handleStatusEdit(selectedShipment.status)}
-                                                    className="p-1 text-blue-600 hover:bg-blue-50 rounded"
-                                                    title="Edit Status"
-                                                >
-                                                    <span className="text-sm font-medium">✏️</span>
-                                                </button>
+                                                {!isStatusFinal(selectedShipment.status) ? (
+                                                    <button
+                                                        onClick={() => handleStatusEdit(selectedShipment.status)}
+                                                        className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                                                        title="Edit Shipment Status"
+                                                    >
+                                                        <span className="text-sm font-medium">✏️</span>
+                                                    </button>
+                                                ) : (
+                                                    <span
+                                                        className="p-1 text-gray-400"
+                                                        title="Final status - cannot be changed"
+                                                    >
+                                                        🔒
+                                                    </span>
+                                                )}
                                             </div>
+                                        )}
+
+                                        {/* Order Status (read-only) */}
+                                        {selectedShipment.order?.status && (
+                                            <span
+                                                className={`px-3 py-1 text-sm font-medium rounded-full border ${getOrderStatusColor(selectedShipment.order.status)}`}>
+                                                Order: {formatStatusForDisplay(selectedShipment.order.status)}
+                                            </span>
                                         )}
                                     </div>
                                 </div>
@@ -319,8 +431,13 @@ const ShipmentAdmin = () => {
                                                     className="font-medium">Last Updated:</span> {formatDate(selectedShipment.updatedAt)}
                                                 </p>
                                                 <p><span
-                                                    className="font-medium">Status:</span> {formatStatusForDisplay(selectedShipment.status)}
+                                                    className="font-medium">Shipment Status:</span> {formatStatusForDisplay(selectedShipment.status)}
                                                 </p>
+                                                {selectedShipment.order?.status && (
+                                                    <p><span
+                                                        className="font-medium">Order Status:</span> {formatStatusForDisplay(selectedShipment.order.status)}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -330,7 +447,7 @@ const ShipmentAdmin = () => {
                                             <h4 className="font-semibold text-gray-900 mb-2">Order Information</h4>
                                             <div className="space-y-2 text-sm">
                                                 <p><span
-                                                    className="font-medium">Order ID:</span> #{selectedShipment.order.id}
+                                                    className="font-medium">Order ID:</span> #{selectedShipment.order.orderId}
                                                 </p>
                                                 {selectedShipment.order.user && (
                                                     <>
@@ -352,54 +469,72 @@ const ShipmentAdmin = () => {
                                                         className="font-medium">Shipping Address:</span> {selectedShipment.order.shippingAddress}
                                                     </p>
                                                 )}
+                                                {selectedShipment.order.billingAddress && (
+                                                    <p><span
+                                                        className="font-medium">Billing Address:</span> {selectedShipment.order.billingAddress}
+                                                    </p>
+                                                )}
                                             </div>
                                         </div>
                                     )}
                                 </div>
 
-                                {selectedShipment.order?.items && selectedShipment.order.items.length > 0 && (
-                                    <div>
-                                        <h4 className="font-semibold text-gray-900 mb-3">Order Items</h4>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-sm">
-                                                <thead>
-                                                <tr className="bg-gray-50 border-b">
-                                                    <th className="text-left p-3 font-medium">Product</th>
-                                                    <th className="text-right p-3 font-medium">Price</th>
-                                                    <th className="text-right p-3 font-medium">Quantity</th>
-                                                    <th className="text-right p-3 font-medium">Subtotal</th>
-                                                </tr>
-                                                </thead>
-                                                <tbody>
-                                                {selectedShipment.order.items.map((item, index) => (
-                                                    <tr key={index} className="border-b">
-                                                        <td className="p-3">{item.productName || item.product?.name || 'Unknown Product'}</td>
-                                                        <td className="p-3 text-right">${(item.unitPrice || item.price || 0).toFixed(2)}</td>
-                                                        <td className="p-3 text-right">{item.quantity || 0}</td>
-                                                        <td className="p-3 text-right">
-                                                            ${((item.unitPrice || item.price || 0) * (item.quantity || 0)).toFixed(2)}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                                {selectedShipment.order.totalAmount && (
-                                                    <tr className="font-semibold bg-gray-50">
-                                                        <td className="p-3" colSpan="3">Total</td>
-                                                        <td className="p-3 text-right">
-                                                            ${selectedShipment.order.totalAmount.toFixed(2)}
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                {/* Shipping and Billing Addresses */}
+                                {(selectedShipment.order?.shippingAddress || selectedShipment.order?.billingAddress) && (
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                        {selectedShipment.order.shippingAddress && (
+                                            <div>
+                                                <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                                                    <span className="mr-1">🚚</span>
+                                                    Shipping Address
+                                                </h4>
+                                                <div className="bg-gray-50 p-3 rounded text-sm">
+                                                    <p>{selectedShipment.order.shippingAddress}</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {selectedShipment.order.billingAddress && (
+                                            <div>
+                                                <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
+                                                    <span className="mr-1">💳</span>
+                                                    Billing Address
+                                                </h4>
+                                                <div className="bg-gray-50 p-3 rounded text-sm">
+                                                    <p>{selectedShipment.order.billingAddress}</p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
+
+                                {/* Status Mapping Information */}
+                                <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+                                    <h4 className="font-semibold text-gray-900 mb-2">Status Mapping</h4>
+                                    <p className="text-sm text-gray-600 mb-2">When you update the shipment status, the
+                                        order status will automatically be updated:</p>
+                                    <div className="grid grid-cols-2 gap-4 text-sm">
+                                        <div>
+                                            <span className="font-medium">CREATED</span> → Order: PROCESSING
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">IN_DELIVERY</span> → Order: SHIPPED
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">DELIVERED</span> → Order: DELIVERED
+                                        </div>
+                                        <div>
+                                            <span className="font-medium">REJECTED</span> → Order: CANCELLED
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         ) : (
                             <div className="flex flex-col items-center justify-center h-96 text-gray-500">
-                                <div className="w-12 h-12 bg-gray-200 rounded"/>
+                                <div className="w-12 h-12 bg-gray-200 rounded mb-4"/>
                                 <p className="text-lg">Select a shipment to view details</p>
-                                <p className="text-sm">Click on any shipment from the list to see its information</p>
+                                <p className="text-sm">Click on any shipment from the list to see its information and
+                                    update its status</p>
                             </div>
                         )}
                     </div>

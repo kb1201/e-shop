@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { orderApi } from "../api";
+import {AuthContext} from "../auth/AuthContext";
 
 const CartContext = createContext();
 
@@ -9,13 +10,16 @@ export const useCart = () => {
 };
 
 export const CartProvider = ({ children }) => {
+    const {token, userId, logout, isAdmin} = useContext(AuthContext);
     const [cart, setCart] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
     // Fetch cart items on component mount
     useEffect(() => {
-        fetchCart();
+        if (!isAdmin()) {
+            fetchCart();
+        }
     }, []);
 
     // Get cart items from API
@@ -35,6 +39,7 @@ export const CartProvider = ({ children }) => {
 
     // Add item to cart
     const addToCart = async (product) => {
+        if (isAdmin()) return;
         setLoading(true);
         try {
             const cartItem = {
@@ -80,6 +85,7 @@ export const CartProvider = ({ children }) => {
 
     // Update cart item quantity
     const updateCartItem = async (cartItemId, quantity) => {
+        if (isAdmin()) return;
         if (quantity <= 0) {
             return removeFromCart(cartItemId);
         }
@@ -124,6 +130,7 @@ export const CartProvider = ({ children }) => {
 
     // Remove item from cart
     const removeFromCart = async (cartItemId) => {
+        if (isAdmin()) return;
         setLoading(true);
         try {
             await orderApi.delete(`/cart/${cartItemId}`);
@@ -143,6 +150,7 @@ export const CartProvider = ({ children }) => {
 
     // Clear cart
     const clearCart = async () => {
+        if (isAdmin()) return;
         setLoading(true);
         try {
             await orderApi.delete('/cart');
@@ -160,6 +168,7 @@ export const CartProvider = ({ children }) => {
 
     // Create order from cart
     const createOrder = async (orderDetails) => {
+        if (isAdmin()) return;
         setLoading(true);
         try {
             const orderRequest = {

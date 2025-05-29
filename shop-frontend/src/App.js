@@ -9,6 +9,8 @@ import ProductList from "./product/ProductList";
 import CartPage from "./cart/CartPage";
 import OrderHistory from "./order/OrderHistory";
 import ShipmentAdmin from "./shipment/Shipment";
+import InventoryAdmin from "./inventory/AdminInventoryPage";
+import AdminRoute from "./auth/AdminRoute";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -28,7 +30,19 @@ function App() {
                 <Route path="/products" element={<ProductList/>}/>
                 <Route path="/orders" element={<OrderHistory/>}/>
                 <Route path="/cart" element={<CartPage/>}/>
-                <Route path="/shipments" element={<ShipmentAdmin/>}/>
+                <Route path="/shipments" element={
+                    <AdminRoute>
+                        <ShipmentAdmin/>
+                    </AdminRoute>
+                }/>
+                <Route
+                    path="/inventory"
+                    element={
+                        <AdminRoute>
+                            <InventoryAdmin/>
+                        </AdminRoute>
+                    }
+                />
             </Routes>
         </Router>
     );

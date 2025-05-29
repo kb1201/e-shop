@@ -16,6 +16,9 @@ const shipmentApi = axios.create({
     baseURL: 'http://localhost:8082',
 });
 
+const inventoryApi = axios.create({
+    baseURL: 'http://localhost:8083',
+});
 
 const addAuthToken = (config) => {
     const token = localStorage.getItem('token');
@@ -29,5 +32,6 @@ userApi.interceptors.request.use(addAuthToken, (error) => Promise.reject(error))
 catalogApi.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 shipmentApi.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 orderApi.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
+inventoryApi.interceptors.request.use(addAuthToken, (error) => Promise.reject(error));
 
-export {userApi, catalogApi, shipmentApi, orderApi};
+export {userApi, catalogApi, shipmentApi, orderApi, inventoryApi};

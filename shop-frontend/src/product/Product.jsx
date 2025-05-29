@@ -5,7 +5,7 @@ import {useNavigate} from "react-router-dom"; // Assuming you have an AuthContex
 const ProductCard = ({product, addToCart}) => {
     const [added, setAdded] = useState(false);
     const hasDiscount = product.discountedPrice && product.discountedPrice < product.actualPrice;
-    const {token, userId, logout} = useContext(AuthContext);
+    const {token, userId, logout, isAdmin} = useContext(AuthContext);
     const navigate = useNavigate(); // Hook to navigate to different routes
 
     const handleAddToCart = () => {
@@ -87,13 +87,14 @@ const ProductCard = ({product, addToCart}) => {
                 </div>
 
                 {/* Add to Cart Button */}
-                <button
+                {!isAdmin() && (<button
                     onClick={handleAddToCart}
                     className={`block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2 rounded-md font-medium transition-colors duration-300 ${added ? 'bg-gray-500' : ''}`}
                     disabled={added}
                 >
                     {added ? 'Added to Cart' : 'Add to Cart'}
-                </button>
+                </button>)}
+
             </div>
         </div>
     );
