@@ -3,6 +3,8 @@ package hr.fer.dipl.db.repository;
 
 import hr.fer.dipl.db.model.Inventory;
 import hr.fer.dipl.db.model.InventoryStatus;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
@@ -20,7 +22,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
 
     Optional<Inventory> findBySku(String sku);
 
-    List<Inventory> findByStatus(InventoryStatus status);
+    Page<Inventory> findByStatus(InventoryStatus status, Pageable pageable);
+
 
     @Query("SELECT i FROM Inventory i WHERE i.quantityAvailable - i.reservedQuantity <= i.reorderThreshold")
     List<Inventory> findItemsNeedingRestock();
@@ -30,6 +33,8 @@ public interface InventoryRepository extends JpaRepository<Inventory, Long> {
     @Query("SELECT i FROM Inventory i WHERE i.id = :id")
     Optional<Inventory> findByIdWithLock(Long id);
 
+
+    //TODO replace with update where id
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT i FROM Inventory i WHERE i.productId = :productId")
     Optional<Inventory> findByProductIdWithLock(Long productId);

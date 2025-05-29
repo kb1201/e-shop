@@ -19,6 +19,8 @@ public class ShipmentMapper {
 
         OrderEvent orderDTO = new OrderEvent();
         orderDTO.setOrderId(shipment.getOrderId());
+        orderDTO.setShippingAddress(shipment.getShippingAddress());
+        orderDTO.setBillingAddress(shipment.getBillingAddress());
 
         return new ShipmentDTO(
                 shipment.getId(),
@@ -39,6 +41,8 @@ public class ShipmentMapper {
         shipment.setCreatedAt(shipmentDTO.getCreatedAt());
         shipment.setUpdatedAt(shipmentDTO.getUpdatedAt());
         shipment.setStatus(shipmentDTO.getStatus());
+        shipment.setBillingAddress(shipmentDTO.getOrder().getBillingAddress());
+        shipment.setShippingAddress(shipmentDTO.getOrder().getShippingAddress());
 
         if (shipmentDTO.getOrder() != null) {
             shipment.setOrderId(shipmentDTO.getOrder().getOrderId());
@@ -52,6 +56,8 @@ public class ShipmentMapper {
         shipment.setCreatedAt(LocalDateTime.now());
         shipment.setStatus(ShipmentStatus.CREATED);
         shipment.setOrderId(orderDTO.getOrderId());
+        shipment.setBillingAddress(orderDTO.getBillingAddress());
+        shipment.setShippingAddress(orderDTO.getShippingAddress());
         return shipment;
     }
 }

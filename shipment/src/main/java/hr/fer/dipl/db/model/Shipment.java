@@ -19,6 +19,9 @@ public class Shipment {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
+    private String shippingAddress;
+    private String billingAddress;
+
     @Enumerated(EnumType.STRING)
     private ShipmentStatus status;
 

@@ -3,6 +3,7 @@ package hr.fer.dipl.controller;
 
 import hr.fer.dipl.db.model.Product;
 import hr.fer.dipl.dto.ProductDTO;
+import hr.fer.dipl.dto.ProductNameDTO;
 import hr.fer.dipl.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,8 +13,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/products")
@@ -50,12 +53,15 @@ public class ProductController {
         return ResponseEntity.ok(productPage);
     }
 
-//    // Get products by a list of IDs
-//    @GetMapping("/id")
-//    public ResponseEntity<List<ProductDTO>> getProductsByIds(@RequestParam("ids") List<Integer> ids) {
-//        List<ProductDTO> products = productService.getProductsByIds(ids);
-//        return ResponseEntity.ok(products);
-//    }
+    @GetMapping("/names")
+    public List<ProductNameDTO> getProductNames(@RequestParam("ids") String ids) {
+        List<Long> idList = Arrays.stream(ids.split(","))
+                .map(String::trim)
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+
+        return productService.getProductNamesByIds(idList);
+    }
 
     @GetMapping("/popular")
     public ResponseEntity<Page<ProductDTO>> getPopularProducts(

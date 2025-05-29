@@ -5,6 +5,9 @@ import hr.fer.dipl.dto.InventoryDTO;
 import hr.fer.dipl.dto.InventoryRequest;
 import hr.fer.dipl.service.InventoryServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -25,10 +28,15 @@ public class InventoryController {
 
     // --- Inventory CRUD ---
     @GetMapping
-    public ResponseEntity<List<InventoryDTO>> getAllInventory() {
-        return ResponseEntity.ok(inventoryService.getAllInventory());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Page<InventoryDTO>> getAllInventory(
+            @PageableDefault(size = 20, sort = "id") Pageable pageable,
+            @RequestParam(required = false) InventoryStatus status) {
+        var inventoryPage = status == null
+                ? inventoryService.getInventory(pageable)
+                : inventoryService.getInventoryByStatus(status, pageable);
+        return ResponseEntity.ok(inventoryPage);
     }
-
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
@@ -51,21 +59,25 @@ public class InventoryController {
 
     // --- Inventory Queries ---
     @GetMapping("/product/{productId}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<InventoryDTO> getInventoryByProductId(@PathVariable Long productId) {
         return ResponseEntity.ok(inventoryService.getInventoryByProductId(productId));
     }
 
     @GetMapping("/sku/{sku}")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<InventoryDTO> getInventoryBySku(@PathVariable String sku) {
         return ResponseEntity.ok(inventoryService.getInventoryBySku(sku));
     }
 
-    @GetMapping("/status/{status}")
-    public ResponseEntity<List<InventoryDTO>> getInventoryByStatus(@PathVariable InventoryStatus status) {
-        return ResponseEntity.ok(inventoryService.getInventoryByStatus(status));
-    }
+//    @GetMapping("/status/{status}")
+//    @PreAuthorize("hasRole('ADMIN')")
+//    public ResponseEntity<List<InventoryDTO>> getInventoryByStatus(@PathVariable InventoryStatus status) {
+//        return ResponseEntity.ok(inventoryService.getInventoryByStatus(status));
+//    }
 
 
+    //TODO
     @GetMapping("/restock-needed")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<InventoryDTO>> getItemsNeedingRestock() {
@@ -102,9 +114,9 @@ public class InventoryController {
     // --- Restock ---
     @PutMapping("/{productId}/restock")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> restockInventory(@PathVariable Long productId, @RequestBody InventoryRequest request) {
-        inventoryService.restockInventory(productId, request.getQuantity());
-        return ResponseEntity.ok().build();
+    public ResponseEntity<InventoryDTO> restockInventory(@PathVariable Long productId, @RequestBody InventoryRequest request) {
+        var res = inventoryService.restockInventory(productId, request.getQuantity());
+        return ResponseEntity.ok(res);
     }
 
 

@@ -12,6 +12,12 @@
             <column name="id" type="bigserial">
                 <constraints primaryKey="true" nullable="false"/>
             </column>
+            <column name="shipping_address" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="billing_address" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
             <column name="created_at" type="timestamp"/>
             <column name="updated_at" type="timestamp"/>
             <column name="status" type="varchar(255)">
@@ -20,7 +26,6 @@
             <column name="order_id" type="bigint"/>
         </createTable>
     </changeSet>
-
 
 
 </databaseChangeLog>

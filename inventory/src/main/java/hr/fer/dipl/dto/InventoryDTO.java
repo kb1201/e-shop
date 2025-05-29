@@ -15,6 +15,7 @@ import java.time.LocalDateTime;
 public class InventoryDTO {
     private Long id;
     private Long productId;
+    private String productName;
     private String sku;
     private Integer quantityAvailable;
     private Integer reservedQuantity;

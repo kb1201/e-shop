@@ -31,7 +31,7 @@ ON CONFLICT (name) DO NOTHING;
 
 -- Insert the admin user if not already present
 INSERT INTO user_service.users (username, password)
-VALUES ('admin@admin.hr', '$2a$10$UazPxghquvKJh9o8T4Vt1uXcOLaNwHdN7LSapZCX3wq4A1KInW6yK')
+VALUES ('admin@admin.hr', '$2a$10$nJtt9SDTfFmPKqBuN6XSge.YyCxJWErhCl9b1L.Uu1v/4dhQdf7y.')
 ON CONFLICT (username) DO NOTHING;
 -- Password: "admin" (BCrypt-hashed using 10 rounds)
 

@@ -3,6 +3,7 @@ package hr.fer.dipl.service;
 import hr.fer.dipl.db.model.Product;
 import hr.fer.dipl.db.repository.ProductRepository;
 import hr.fer.dipl.dto.ProductDTO;
+import hr.fer.dipl.dto.ProductNameDTO;
 import hr.fer.dipl.mapper.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
@@ -50,5 +52,12 @@ public class ProductService {
         // Map the list of products to a list of ProductDTO
 
         return products.map(ProductMapper::toDTO);
+    }
+
+    public List<ProductNameDTO> getProductNamesByIds(List<Long> ids) {
+        List<Product> products = productRepository.findByIdIn(ids);
+        return products.stream()
+                .map(p -> new ProductNameDTO(p.getId(), p.getName()))
+                .collect(Collectors.toList());
     }
 }
