@@ -11,6 +11,7 @@ import OrderHistory from "./order/OrderHistory";
 import ShipmentAdmin from "./shipment/Shipment";
 import InventoryAdmin from "./inventory/AdminInventoryPage";
 import AdminRoute from "./auth/AdminRoute";
+import Dashboard from "./analytics/Dashboard";
 
 function App() {
     const [user, setUser] = useState(null);
@@ -40,6 +41,14 @@ function App() {
                     element={
                         <AdminRoute>
                             <InventoryAdmin/>
+                        </AdminRoute>
+                    }
+                />
+                <Route
+                    path="/dashboard"
+                    element={
+                        <AdminRoute>
+                            <Dashboard/>
                         </AdminRoute>
                     }
                 />
