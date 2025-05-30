@@ -1,5 +1,7 @@
 package hr.fer.dipl.service;
 
+import hr.fer.dipl.client.recommendation.RecommendationSystemClient;
+import hr.fer.dipl.client.recommendation.model.RecommendationRequest;
 import hr.fer.dipl.db.model.Product;
 import hr.fer.dipl.db.repository.ProductRepository;
 import hr.fer.dipl.dto.ProductDTO;
@@ -7,6 +9,7 @@ import hr.fer.dipl.dto.ProductNameDTO;
 import hr.fer.dipl.mapper.ProductMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -19,10 +22,14 @@ import java.util.stream.Collectors;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final RecommendationSystemClient client;
+    private final SecurityUtils securityUtils;
 
     @Autowired
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, RecommendationSystemClient client, SecurityUtils securityUtils) {
         this.productRepository = productRepository;
+        this.client = client;
+        this.securityUtils = securityUtils;
     }
 
     public Optional<ProductDTO> getProductById(int productId) {
@@ -52,6 +59,19 @@ public class ProductService {
         // Map the list of products to a list of ProductDTO
 
         return products.map(ProductMapper::toDTO);
+    }
+
+    public Page<ProductDTO> getRecommendations(int page, int size) {
+        var userId = securityUtils.getCurrentUserId();
+        Pageable pageable = PageRequest.of(page, size);
+
+        var response = client.getRecommendations(new RecommendationRequest(userId, page, size));
+
+        var products = productRepository
+                .findByIdIn(response.getRecommendations()).stream()
+                .map(ProductMapper::toDTO).toList();
+
+        return new PageImpl<>(products, pageable, response.getPagination().getTotalItems());
     }
 
     public List<ProductNameDTO> getProductNamesByIds(List<Long> ids) {

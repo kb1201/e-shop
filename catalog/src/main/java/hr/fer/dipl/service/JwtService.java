@@ -63,6 +63,17 @@ public class JwtService {
         }
     }
 
+    public Long extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        Object userIdClaim = claims.get("userId");
+        if (userIdClaim instanceof Integer) {
+            return ((Integer) userIdClaim).longValue();
+        } else if (userIdClaim instanceof Long) {
+            return (Long) userIdClaim;
+        }
+        return null;
+    }
+
     private PublicKey getPublicKey(Resource publicKeyResource) throws Exception {
         byte[] keyBytes = publicKeyResource.getInputStream().readAllBytes();
         String publicKeyPem = new String(keyBytes)

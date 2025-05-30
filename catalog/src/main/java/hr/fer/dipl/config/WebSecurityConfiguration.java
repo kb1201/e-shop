@@ -40,6 +40,7 @@ public class WebSecurityConfiguration {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(corsCustomizer())
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/products/recommendation").authenticated()
                         .requestMatchers("/products/**").permitAll()
                         .anyRequest().authenticated()
                 )

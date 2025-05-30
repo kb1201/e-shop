@@ -63,16 +63,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     // Extract claims and authorities
                     Claims claims = jwtService.extractAllClaims(jwt);
                     Collection<? extends GrantedAuthority> authorities = jwtService.getAuthorities(claims);
+                    var userId = jwtService.extractUserId(jwt);
 
                     // Create authentication token with username, null credentials, and authorities
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            username,
+                            userId,
                             null,
                             authorities
                     );
 
                     // Add request details to authentication token
-                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    authToken.setDetails(jwt);
 
                     // Set authentication in security context
                     SecurityContextHolder.getContext().setAuthentication(authToken);

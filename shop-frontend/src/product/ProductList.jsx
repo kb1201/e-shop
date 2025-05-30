@@ -1,7 +1,8 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {catalogApi} from "../api";
 import ProductCard from "./Product";
 import {useCart} from "../cart/CartContext";
+import {AuthContext} from "../auth/AuthContext";
 
 const ProductList = ({initialSearchQuery = ""}) => {
     const [products, setProducts] = useState([]);
@@ -13,6 +14,7 @@ const ProductList = ({initialSearchQuery = ""}) => {
     const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
     const [inputValue, setInputValue] = useState(initialSearchQuery);
     const {addToCart} = useCart();
+    const {userId} = useContext(AuthContext);
 
     // Reset to page 0 on query/mode change
     useEffect(() => {
@@ -28,7 +30,10 @@ const ProductList = ({initialSearchQuery = ""}) => {
                     ? `/products/search?q=${encodeURIComponent(searchQuery)}&page=${page}`
                     : viewMode === 'popular'
                         ? `/products/popular?page=${page}`
-                        : `/products?page=${page}`;
+                        : viewMode === 'foryou'
+                            ? `/products/recommendations?page=${page}`
+                            : `/products?page=${page}`;
+
 
                 const response = await catalogApi.get(endpoint);
                 setProducts(response.data.content || []);
@@ -45,10 +50,21 @@ const ProductList = ({initialSearchQuery = ""}) => {
     }, [searchQuery, viewMode, page]);
 
     const handleViewChange = (mode) => {
+        if (mode === 'foryou' && !userId) {
+            setViewMode('popular');
+            return;
+        }
         setSearchQuery(""); // Clear search
         setInputValue("");  // Reset input
         setViewMode(mode);
     };
+
+    useEffect(() => {
+        if (!userId && viewMode === 'foryou') {
+            setViewMode('popular');
+        }
+    }, [userId, viewMode]);
+
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -83,12 +99,11 @@ const ProductList = ({initialSearchQuery = ""}) => {
             ) : (
                 <div className="flex justify-between items-center mb-6">
                     <h2 className="text-xl font-semibold text-gray-700">
-                        {viewMode === 'popular' ? 'Popular Products' : 'All Products'}
+                        {viewMode === 'popular' ? 'Popular Products' : 'For You'}
                     </h2>
                     <div className="flex space-x-2">
                         <button
-                            onClick={() => {
-                            }} // handleViewChange('popular')
+                            onClick={() => handleViewChange('popular')}
                             className={`px-4 py-2 rounded-lg transition ${
                                 viewMode === 'popular'
                                     ? 'bg-blue-600 text-white'
@@ -97,6 +112,19 @@ const ProductList = ({initialSearchQuery = ""}) => {
                         >
                             Popular
                         </button>
+                        {userId && (
+                            <button
+                                onClick={() => handleViewChange('foryou')}
+                                className={`px-4 py-2 rounded-lg transition ${
+                                    viewMode === 'foryou'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                                }`}
+                            >
+                                For You
+                            </button>
+                        )}
+
                         {/*<button*/}
                         {/*    onClick={() => handleViewChange('all')}*/}
                         {/*    className={`px-4 py-2 rounded-lg transition ${*/}

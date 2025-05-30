@@ -14,7 +14,7 @@ class RecommendationRequest(BaseModel):
     user_id: int = Field(..., alias="userId")
     # num_recommendations: int = Field(10, alias="numRecommendations")
     # exclude_purchased: bool = Field(True, alias="excludePurchased")
-    page: int = Field(default=1, ge=1, description="Page number (1-based)")
+    page: int = Field(default=0, ge=0, description="Page number (1-based)")
     page_size: int = Field(default=10, ge=1, le=100, description="Items per page (max 100)", alias="pageSize")
 
 

@@ -53,6 +53,13 @@ public class ProductController {
         return ResponseEntity.ok(productPage);
     }
 
+    @GetMapping("/recommendations")
+    public ResponseEntity<Page<ProductDTO>> getRecommendations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(productService.getRecommendations(page, size));
+    }
+
     @GetMapping("/names")
     public List<ProductNameDTO> getProductNames(@RequestParam("ids") String ids) {
         List<Long> idList = Arrays.stream(ids.split(","))
@@ -67,6 +74,6 @@ public class ProductController {
     public ResponseEntity<Page<ProductDTO>> getPopularProducts(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return ResponseEntity.ok(productService.getMostPopularProducts(page, size));
+         return ResponseEntity.ok(productService.getMostPopularProducts(page, size));
     }
 }

@@ -25,20 +25,10 @@ spring:
     liquibase-schema: catalog
     database-change-log-table: databasechangelog
     database-change-log-lock-table: databasechangeloglock
-  kafka:
-    bootstrap-servers: localhost:9092
-    consumer:
-      auto-offset-reset: earliest
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-  jvm:
-    args: -Xmx4g
 
-kafka:
-  topic:
-    orders: orders
-  group:
-    id: recommendation-service
+
+recommendation-service:
+  url: "http://localhost:8085"
 
 security:
   jwt:

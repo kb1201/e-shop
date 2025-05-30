@@ -16,6 +16,11 @@ configurations {
         extendsFrom(configurations.annotationProcessor.get())
     }
 }
+dependencyManagement {
+    imports {
+        mavenBom("org.springframework.cloud:spring-cloud-dependencies:2023.0.1")
+    }
+}
 
 
 dependencies {
@@ -30,6 +35,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-cache")
     implementation("org.springframework.boot:spring-boot-starter-data-redis")
     implementation("org.apache.commons:commons-math3:3.6.1")
+    implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")

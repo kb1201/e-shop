@@ -1,6 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, {createContext, useContext, useState, useEffect} from 'react';
 import axios from 'axios';
-import { orderApi } from "../api";
+import {orderApi} from "../api";
 import {AuthContext} from "../auth/AuthContext";
 
 const CartContext = createContext();
@@ -9,7 +9,7 @@ export const useCart = () => {
     return useContext(CartContext);
 };
 
-export const CartProvider = ({ children }) => {
+export const CartProvider = ({children}) => {
     const {token, userId, logout, isAdmin} = useContext(AuthContext);
     const [cart, setCart] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -17,6 +17,7 @@ export const CartProvider = ({ children }) => {
 
     // Fetch cart items on component mount
     useEffect(() => {
+        setError(null);
         if (!isAdmin()) {
             fetchCart();
         }
