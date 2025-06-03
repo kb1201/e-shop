@@ -1,0 +1,27 @@
+{
+  "name": "inventory-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "db",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "changeme",
+    "database.dbname": "inventory",
+    "database.server.name": "inventory-server",
+    "table.include.list": "inventory.inventory",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_inventory",
+    "publication.name": "dbz_inventory_publication",
+    "publication.autocreate.mode": "filtered",
+    "topic.prefix": "inventory",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": false,
+    "value.converter.schemas.enable": false,
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": false,
+    "transforms.unwrap.delete.handling.mode": "rewrite",
+    "decimal.handling.mode": "string"
+  }
+}

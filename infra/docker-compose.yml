@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     ports:
       - "45432:5432"
-    command: [ 'postgres', '-c', 'log_statement=all', '-c', 'max_connections=500', '-c', 'listen_addresses=0.0.0.0' ]
+    command: [ 'postgres', '-c', 'log_statement=all', '-c', 'max_connections=500', '-c', 'listen_addresses=0.0.0.0', '-c', 'wal_level=logical', '-c', 'max_replication_slots=4', '-c', 'max_wal_senders=4' ]
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: changeme
@@ -18,46 +18,8 @@ services:
       - ./db/create-dbs.sh:/docker-entrypoint-initdb.d/create-dbs.sh
     networks:
       local_network:
-    
-#  keycloak_web:
-#    image: quay.io/keycloak/keycloak:23.0.7
-#    container_name: keycloak_web
-#    environment:
-#      KC_DB: postgres
-#      KC_DB_URL: jdbc:postgresql://keycloakdb:5433/keycloak
-#      KC_DB_USERNAME: keycloak
-#      KC_DB_PASSWORD: password
-#
-#      KC_HOSTNAME: localhost
-#      KC_HOSTNAME_PORT: 48080
-#      KC_HOSTNAME_STRICT: false
-#      KC_HOSTNAME_STRICT_HTTPS: false
-#
-#      KC_LOG_LEVEL: info
-#      KC_METRICS_ENABLED: true
-#      KC_HEALTH_ENABLED: true
-#      KEYCLOAK_ADMIN: admin
-#      KEYCLOAK_ADMIN_PASSWORD: admin
-#    command: start-dev
-#    depends_on:
-#      - keycloakdb
-#    ports:
-#      - 48080:8080
-#
-#  keycloakdb:
-#    image: postgres:15
-#    container_name: keycloakdb
-#    volumes:
-#      - postgres_data:/var/lib/postgresql/data2
-#    ports:
-#      - "45433:5433"
-#    environment:
-#      POSTGRES_DB: keycloak
-#      POSTGRES_USER: keycloak
-#      POSTGRES_PASSWORD: password
-#      PGPORT: 5433
+
   zookeeper:
-    # restart: no
     image: docker.io/bitnami/zookeeper:3.8
     ports:
       - "12181:2181"
@@ -65,8 +27,8 @@ services:
       - ALLOW_ANONYMOUS_LOGIN=yes
     networks:
       local_network:
+
   kafka:
-    # restart: no
     image: docker.io/bitnami/kafka:3.4
     ports:
       - "19093:9093"
@@ -79,13 +41,25 @@ services:
       - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
       - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
       - ALLOW_PLAINTEXT_LISTENER=yes
+      # Increase message size limits to handle large CDC payloads
+      - KAFKA_CFG_MESSAGE_MAX_BYTES=2147483647          # ~2GB max message size
+      - KAFKA_CFG_REPLICA_FETCH_MAX_BYTES=2147483647    # ~2GB replica fetch
+      - KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES=2147483647   # ~2GB socket request
+      # Producer settings
+      - KAFKA_CFG_PRODUCER_MAX_REQUEST_SIZE=2147483647  # ~2GB producer max request
+      # Consumer settings
+      - KAFKA_CFG_CONSUMER_MAX_PARTITION_FETCH_BYTES=2147483647  # ~2GB consumer fetch
+      # Log settings for better performance with large messages
+      - KAFKA_CFG_LOG_SEGMENT_BYTES=1073741824          # 1GB log segments
+      - KAFKA_CFG_LOG_RETENTION_BYTES=10737418240       # 10GB retention
+      # JVM heap settings for handling large messages
+      - KAFKA_HEAP_OPTS=-Xmx2g -Xms2g
     depends_on:
       - zookeeper
     networks:
       local_network:
 
   kafka-ui:
-    #   restart: no
     container_name: kafka-ui
     image: provectuslabs/kafka-ui:latest
     ports:
@@ -99,10 +73,90 @@ services:
     depends_on:
       - kafka
 
+  # Debezium Connect for CDC
+  debezium-connect:
+    image: debezium/connect:2.4
+    container_name: debezium-connect
+    ports:
+      - "48083:8083"
+    environment:
+      BOOTSTRAP_SERVERS: kafka:9092
+      GROUP_ID: debezium-cluster
+      CONFIG_STORAGE_TOPIC: debezium-configs
+      OFFSET_STORAGE_TOPIC: debezium-offsets
+      STATUS_STORAGE_TOPIC: debezium-status
+      CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      STATUS_STORAGE_REPLICATION_FACTOR: 1
+      # Configure for large messages
+      CONNECT_PRODUCER_MAX_REQUEST_SIZE: 1073741824     # 1GB
+      CONNECT_CONSUMER_MAX_PARTITION_FETCH_BYTES: 1073741824  # 1GB
+      CONNECT_CONSUMER_FETCH_MAX_BYTES: 1073741824      # 1GB
+      # REST API configuration
+      CONNECT_REST_PORT: 8083
+      CONNECT_REST_ADVERTISED_HOST_NAME: debezium-connect
+      # Key/Value converters
+      CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'false'
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'false'
+      # Increase timeouts for large message processing
+      CONNECT_TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS: 60000
+      CONNECT_OFFSET_FLUSH_TIMEOUT_MS: 10000
+      CONNECT_CONSUMER_SESSION_TIMEOUT_MS: 30000
+      CONNECT_CONSUMER_HEARTBEAT_INTERVAL_MS: 3000
+      # JVM settings for handling large messages
+      KAFKA_HEAP_OPTS: -Xmx2g -Xms1g
+    depends_on:
+      - kafka
+      - db
+    networks:
+      local_network:
+
+  # ClickHouse for Analytics
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    container_name: clickhouse-server
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ./clickhouse/init:/docker-entrypoint-initdb.d
+    environment:
+      - CLICKHOUSE_DB=analytics
+      - CLICKHOUSE_USER=admin
+      - CLICKHOUSE_PASSWORD=changeme
+    networks:
+      - local_network
+
+
+  #todo to another compose
+  # Kafka to ClickHouse connector
+  kafka-clickhouse-connector:
+    image: python:3.11-slim
+    container_name: kafka-clickhouse-connector
+    volumes:
+      - ./connectors:/app
+    working_dir: /app
+    command: >
+      bash -c "
+        pip install kafka-python clickhouse-driver &&
+        python kafka_to_clickhouse.py
+      "
+    depends_on:
+      - kafka
+      - clickhouse
+    networks:
+      local_network:
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
     ports:
       - "46379:6379"
+    networks:
+      local_network:
 
 networks:
   local_network:
@@ -111,4 +165,4 @@ networks:
 
 volumes:
   pg-data:
-  postgres_data:
+  clickhouse_data:

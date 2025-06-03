@@ -5,7 +5,7 @@ plugins {
     kotlin("plugin.spring") version "1.9.22"
 }
 
-group = "hr.fer.diplomsi"
+group = "hr.fer.diplomski"
 version = "0.0.1-SNAPSHOT"
 
 repositories {

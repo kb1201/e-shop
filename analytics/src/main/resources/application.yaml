@@ -1,0 +1,28 @@
+server:
+  port: 8086
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: analytics-service
+
+# ClickHouse Configuration
+clickhouse:
+  url: jdbc:clickhouse://localhost:8123/analytics
+  username: admin
+  password: changeme
+  driver-class-name: com.clickhouse.jdbc.ClickHouseDriver
+
+security:
+  jwt:
+    public-key-path: classpath:public.pem
+
+
+# Logging Configuration
+logging:
+  level:
+    hr.fer.dipl: DEBUG
+    org.springframework.jdbc: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"

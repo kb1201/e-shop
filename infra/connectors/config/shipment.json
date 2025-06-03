@@ -1,0 +1,27 @@
+{
+  "name": "shipment-connector",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "database.hostname": "db",
+    "database.port": "5432",
+    "database.user": "postgres",
+    "database.password": "changeme",
+    "database.dbname": "shipment",
+    "database.server.name": "shipment-server",
+    "table.include.list": "shipment.shipment",
+    "plugin.name": "pgoutput",
+    "slot.name": "debezium_shipment",
+    "publication.name": "dbz_shipment_publication",
+    "publication.autocreate.mode": "filtered",
+    "topic.prefix": "shipment",
+    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "key.converter.schemas.enable": false,
+    "value.converter.schemas.enable": false,
+    "transforms": "unwrap",
+    "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+    "transforms.unwrap.drop.tombstones": false,
+    "transforms.unwrap.delete.handling.mode": "rewrite",
+    "decimal.handling.mode": "string"
+  }
+}

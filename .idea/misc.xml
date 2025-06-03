@@ -5,6 +5,7 @@
   </component>
   <component name="ExternalStorageConfigurationManager" enabled="true" />
   <component name="FrameworkDetectionExcludesConfiguration">
+    <file type="web" url="file://$PROJECT_DIR$/analytics" />
     <file type="web" url="file://$PROJECT_DIR$/catalog" />
     <file type="web" url="file://$PROJECT_DIR$/inventory" />
     <file type="web" url="file://$PROJECT_DIR$/ordering" />

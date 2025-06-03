@@ -1,5 +1,7 @@
 import asyncio
 import json
+from datetime import datetime
+
 from aiokafka import AIOKafkaConsumer
 from typing import Dict, Any
 from app.core.config import settings
@@ -28,7 +30,7 @@ async def process_user_product_event(event_data: Dict[str, Any]):
             interaction_type='purchase',
             quantity=quantity,
             rating=None,
-            timestamp=timestamp
+            timestamp=datetime.fromtimestamp(timestamp / 1000.0)
         )
 
         db.add(interaction)

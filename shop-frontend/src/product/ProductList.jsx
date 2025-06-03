@@ -14,7 +14,7 @@ const ProductList = ({initialSearchQuery = ""}) => {
     const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
     const [inputValue, setInputValue] = useState(initialSearchQuery);
     const {addToCart} = useCart();
-    const {userId} = useContext(AuthContext);
+    const {token, userId, logout, isAdmin} = useContext(AuthContext);
 
     // Reset to page 0 on query/mode change
     useEffect(() => {
@@ -112,7 +112,7 @@ const ProductList = ({initialSearchQuery = ""}) => {
                         >
                             Popular
                         </button>
-                        {userId && (
+                        {userId && !isAdmin() && (
                             <button
                                 onClick={() => handleViewChange('foryou')}
                                 className={`px-4 py-2 rounded-lg transition ${

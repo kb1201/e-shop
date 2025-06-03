@@ -13,6 +13,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.util.List;
 import java.util.Optional;
@@ -65,13 +66,19 @@ public class ProductService {
         var userId = securityUtils.getCurrentUserId();
         Pageable pageable = PageRequest.of(page, size);
 
-        var response = client.getRecommendations(new RecommendationRequest(userId, page, size));
+        try {
+            var response = client.getRecommendations(new RecommendationRequest(userId, page, size));
 
-        var products = productRepository
-                .findByIdIn(response.getRecommendations()).stream()
-                .map(ProductMapper::toDTO).toList();
+            var products = productRepository
+                    .findByIdIn(response.getRecommendations()).stream()
+                    .map(ProductMapper::toDTO).toList();
 
-        return new PageImpl<>(products, pageable, response.getPagination().getTotalItems());
+            return new PageImpl<>(products, pageable, response.getPagination().getTotalItems());
+        } catch (Exception exc) {
+            exc.printStackTrace();
+            return getMostPopularProducts(page, size);
+        }
+
     }
 
     public List<ProductNameDTO> getProductNamesByIds(List<Long> ids) {
