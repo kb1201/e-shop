@@ -113,7 +113,8 @@ const InventoryAdmin = () => {
                         quantityAvailable: parseInt(updatedItem.quantityAvailable),
                         reorderThreshold: parseInt(updatedItem.reorderThreshold),
                         warehouseLocation: updatedItem.warehouseLocation,
-                        shelfLocation: updatedItem.shelfLocation
+                        shelfLocation: updatedItem.shelfLocation,
+                        status: updatedItem.status
                     }
                     : item
             );

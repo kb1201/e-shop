@@ -1,0 +1,443 @@
+openapi: 3.0.0
+info:
+  title: Inventory Management API
+  description: API for managing inventory items, stock levels, and reservations
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: support@example.com
+
+servers:
+  - url: http://localhost:8083
+    description: Inventory Service
+
+components:
+  schemas:
+    InventoryDTO:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: Unique identifier for the inventory item
+        productId:
+          type: integer
+          format: int64
+          description: ID of the associated product
+        productName:
+          type: string
+          description: Name of the product
+        sku:
+          type: string
+          description: Stock Keeping Unit
+        quantityAvailable:
+          type: integer
+          description: Current available quantity
+        reservedQuantity:
+          type: integer
+          description: Quantity currently reserved
+        reorderThreshold:
+          type: integer
+          description: Threshold for reordering
+        warehouseLocation:
+          type: string
+          description: Location in warehouse
+        shelfLocation:
+          type: string
+          description: Location on shelf
+        status:
+          type: string
+          enum: [IN_STOCK, LOW_STOCK, OUT_OF_STOCK]
+          description: Current inventory status
+        lastUpdated:
+          type: string
+          format: date-time
+          description: Last update timestamp
+
+    InventoryRequest:
+      type: object
+      properties:
+        quantity:
+          type: integer
+          description: Quantity to process
+          minimum: 1
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          description: HTTP status code
+        message:
+          type: string
+          description: Error message
+        timestamp:
+          type: integer
+          format: int64
+          description: Error timestamp
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+paths:
+  /inventory:
+    get:
+      summary: Get all inventory items
+      description: Retrieves a paginated list of all inventory items
+      operationId: getAllInventory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          description: Page number (0-based)
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: status
+          in: query
+          description: Filter by inventory status
+          required: false
+          schema:
+            type: string
+            enum: [IN_STOCK, LOW_STOCK, OUT_OF_STOCK]
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  content:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/InventoryDTO'
+                  totalElements:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  size:
+                    type: integer
+                  number:
+                    type: integer
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+    post:
+      summary: Create new inventory item
+      description: Creates a new inventory item
+      operationId: createInventory
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryDTO'
+      responses:
+        '201':
+          description: Inventory item created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryDTO'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /inventory/{id}:
+    put:
+      summary: Update inventory item
+      description: Updates an existing inventory item
+      operationId: updateInventory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryDTO'
+      responses:
+        '200':
+          description: Inventory item updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryDTO'
+        '400':
+          description: Invalid input
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Inventory item not found
+
+    delete:
+      summary: Delete inventory item
+      description: Deletes an inventory item
+      operationId: deleteInventory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Inventory item deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Inventory item not found
+
+  /inventory/product/{productId}:
+    get:
+      summary: Get inventory by product ID
+      description: Retrieves inventory information for a specific product
+      operationId: getInventoryByProductId
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryDTO'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Inventory not found
+
+  /inventory/sku/{sku}:
+    get:
+      summary: Get inventory by SKU
+      description: Retrieves inventory information by SKU
+      operationId: getInventoryBySku
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: sku
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryDTO'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Inventory not found
+
+  /inventory/restock-needed:
+    get:
+      summary: Get items needing restock
+      description: Retrieves a list of inventory items that need restocking
+      operationId: getItemsNeedingRestock
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InventoryDTO'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+
+  /inventory/{productId}/availability:
+    get:
+      summary: Check product availability
+      description: Checks if a product is available in the requested quantity
+      operationId: checkAvailability
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: quantity
+          in: query
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: boolean
+        '404':
+          description: Product not found
+
+  /inventory/{productId}/reservations:
+    post:
+      summary: Reserve inventory
+      description: Reserves a quantity of inventory for a product
+      operationId: reserveInventory
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryRequest'
+      responses:
+        '200':
+          description: Inventory reserved successfully
+        '400':
+          description: Invalid quantity or insufficient inventory
+        '404':
+          description: Product not found
+
+    delete:
+      summary: Release reservation
+      description: Releases a previously reserved quantity of inventory
+      operationId: releaseReservation
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryRequest'
+      responses:
+        '200':
+          description: Reservation released successfully
+        '400':
+          description: Invalid quantity
+        '404':
+          description: Product not found
+
+  /inventory/{productId}/commit:
+    post:
+      summary: Commit reservation
+      description: Commits a previously reserved quantity of inventory
+      operationId: commitReservation
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryRequest'
+      responses:
+        '200':
+          description: Reservation committed successfully
+        '400':
+          description: Invalid quantity
+        '404':
+          description: Product not found
+
+  /inventory/{productId}/restock:
+    put:
+      summary: Restock inventory
+      description: Adds quantity to the available inventory
+      operationId: restockInventory
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InventoryRequest'
+      responses:
+        '200':
+          description: Inventory restocked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InventoryDTO'
+        '400':
+          description: Invalid quantity
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden
+        '404':
+          description: Product not found
+
+security:
+  - bearerAuth: [] 

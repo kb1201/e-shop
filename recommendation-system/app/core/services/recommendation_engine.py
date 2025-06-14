@@ -187,7 +187,23 @@ class HybridRecommendationEngine:
 
         recommendations.sort(key=lambda x: x[1], reverse=True)
         return recommendations[:num_recommendations]
-
+    def normalize_scores(self, scores: List[Tuple[int, float]]) -> List[Tuple[int, float]]:
+        if not scores:
+            return scores
+        
+        score_values = [score for _, score in scores]
+        min_score = min(score_values)
+        max_score = max(score_values)
+        
+        # Avoid division by zero
+        if max_score == min_score:
+            return [(product_id, 1.0) for product_id, _ in scores]
+        
+        normalized = [
+            (product_id, (score - min_score) / (max_score - min_score))
+            for product_id, score in scores
+        ]
+        return normalized
     def get_hybrid_recommendations(self, user_id: int, num_recommendations: int = 10) -> List[Dict]:
         # FIXED: Scale the individual recommendation calls to get more diverse results
         content_recs = self.get_content_based_recommendations(
@@ -196,18 +212,21 @@ class HybridRecommendationEngine:
             top_n_per_product=max(10, num_recommendations // 5)  # Scale similar items per product
         )
         collaborative_recs = self.get_collaborative_recommendations(user_id, num_recommendations * 2)
-
+        
+        content_recs_normalized = self.normalize_scores(content_recs)
+        collaborative_recs_normalized = self.normalize_scores(collaborative_recs)
+        
         all_recommendations = {}
         logger.info("content recs: {}", len(content_recs))
         logger.info("collaborative recs: {}", len(collaborative_recs))
 
-        for product_id, score in content_recs:
+        for product_id, score in content_recs_normalized:
             all_recommendations[product_id] = {
                 'content_score': score,
                 'collaborative_score': 0.0
             }
 
-        for product_id, score in collaborative_recs:
+        for product_id, score in collaborative_recs_normalized:
             if product_id in all_recommendations:
                 all_recommendations[product_id]['collaborative_score'] = score
             else:
