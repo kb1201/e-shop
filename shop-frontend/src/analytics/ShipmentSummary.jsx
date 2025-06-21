@@ -70,6 +70,7 @@ export default function ShipmentAnalyticsChart() {
                                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]}/>
                                 ))}
                             </Pie>
+                            <Legend verticalAlign="bottom"/>
                             <Tooltip/>
                         </PieChart>
                     </ResponsiveContainer>

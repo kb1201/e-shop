@@ -84,50 +84,54 @@ public class AnalyticsService {
 
     public List<OrderStatusDurationDTO> fetchOrderStatusDurations() {
         String sql = """
-                WITH order_transitions AS (
+               
+                WITH order_status_events AS (
                     SELECT
-                        id,
-                        status,
-                        created_at,
+                        id AS order_id,
+                        status AS to_status,
                         updated_at,
-                        lagInFrame(updated_at, 1, created_at) OVER (
-                            PARTITION BY id ORDER BY updated_at
-                            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-                        ) as prev_time
+                        lagInFrame(status, 1, status) OVER (PARTITION BY id ORDER BY updated_at ASC) AS from_status,
+                        lagInFrame(updated_at, 1, updated_at) OVER (PARTITION BY id ORDER BY updated_at ASC) AS prev_updated_at
                     FROM orders_fact
-                    WHERE created_at >= now() - INTERVAL 30 DAY
+                    WHERE created_at >= (now() - toIntervalDay(60))
                 ),
-                order_durations AS (
-                    SELECT
-                        id,
-                        status,
-                        created_at,
-                        updated_at,
-                        prev_time,
-                        dateDiff('hour', prev_time, updated_at) as hours_in_status
-                    FROM order_transitions
-                )
+                     status_durations AS (
+                         SELECT
+                             order_id,
+                             from_status,
+                             to_status,
+                             dateDiff('minute', prev_updated_at, updated_at) AS duration_minutes
+                         FROM order_status_events
+                         WHERE from_status != to_status
+                           AND dateDiff('minute', prev_updated_at, updated_at) > 0
+                     )
                 SELECT
-                    status,
-                    count(*) as status_occurrences,
-                    round(avg(hours_in_status), 2) as avg_hours_in_status,
-                    round(median(hours_in_status), 2) as median_hours_in_status,
-                    max(hours_in_status) as max_hours_in_status
-                FROM order_durations
-                WHERE hours_in_status > 0
-                GROUP BY status
-                ORDER BY avg_hours_in_status DESC
-                """;
+                    from_status,
+                    to_status,
+                    count(*) AS transitions_count,
+                    round(avg(duration_minutes) / 60, 2) AS avg_hours,
+                    round(median(duration_minutes) / 60, 2) AS median_hours,
+                    round(max(duration_minutes) / 60, 2) AS max_hours
+                FROM status_durations
+                GROUP BY from_status, to_status
+                ORDER BY avg_hours DESC
+                
+               """;
 
         return jdbcTemplate.query(sql, (rs, rowNum) -> OrderStatusDurationDTO.builder()
-                .status(rs.getString("status"))
-                .statusOccurrences(rs.getLong("status_occurrences"))
-                .avgHoursInStatus(rs.getDouble("avg_hours_in_status"))
-                .medianHoursInStatus(rs.getDouble("median_hours_in_status"))
-                .maxHoursInStatus(rs.getLong("max_hours_in_status"))
-                .build());
+                .fromStatus(rs.getString("from_status"))
+                .toStatus(rs.getString("to_status"))
+                .statusOccurrences(rs.getLong("transitions_count"))
+                .avgHoursInStatus(rs.getDouble("avg_hours"))
+                .medianHoursInStatus(rs.getDouble("median_hours"))
+                .maxHoursInStatus(rs.getDouble("max_hours"))
+                .build()
+        );
+
     }
 
+
+//todo remove discontinued
 
     public InventoryHealthDTO fetchInventoryHealthSnapshot() {
         String sql = """
@@ -148,7 +152,7 @@ public class AnalyticsService {
                     countIf(status = 'IN_STOCK') as in_stock_products,
                     countIf(status = 'LOW_STOCK') as low_stock_products,
                     countIf(status = 'OUT_OF_STOCK') as out_of_stock_products,
-                    countIf(status = 'DISCONTINUED') as discontinued_products,
+                    countIf(status = 'DISCONTINUED') as discontinued_products, 
 
                     sum(quantity_available) as total_available_qty,
                     sum(reserved_quantity) as total_reserved_qty,
@@ -227,7 +231,7 @@ public class AnalyticsService {
                         countIf(status = 'OUT_OF_STOCK') as out_of_stock_count,
                         count(DISTINCT product_id) as products_tracked
                     FROM inventory_fact
-                    WHERE last_updated >= now() - INTERVAL 8 WEEK
+                    WHERE last_updated >= now() - INTERVAL 4 WEEK
                     GROUP BY week_start
                     ORDER BY week_start ASC
                 """;

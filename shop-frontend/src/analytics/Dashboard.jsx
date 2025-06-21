@@ -1,11 +1,12 @@
 import WarehousePerformanceTable from "./WarehousePerformance";
 import OrderAnalyticsDashboard from "./OrderSummary";
 import PaymentMethodChart from "./PaymentMethodStatsChart";
-import OrderStatusDurationChart from "./OrderStatusDurationCard";
 import InventoryHealthChart from "./InventorySummaryCard";
 import WeeklyInventoryTrendChart from "./InventoryTrends";
 import ShipmentAnalyticsChart from "./ShipmentSummary";
 import ShipmentStatusDurationChart from "./ShipmentStatusDuration";
+import OrderStatusFlowChart from "./OrderStatusDurationCard";
+
 
 const Dashboard = () => {
 
@@ -15,7 +16,7 @@ const Dashboard = () => {
                 {/* Header */}
                 <div className="mb-8 text-center">
                     <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-slate-800 via-blue-800 to-indigo-800 bg-clip-text text-transparent mb-3">
-                        Inventory Analytics Dashboard
+                        Analytics Dashboard
                     </h1>
                 </div>
 
@@ -36,13 +37,13 @@ const Dashboard = () => {
 
                     {/* Order Status Duration - Medium width */}
                     <div
-                        className="lg:col-span-6 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
-                        <OrderStatusDurationChart/>
+                        className="lg:col-span-5 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
+                        <OrderStatusFlowChart/>
                     </div>
 
                     {/* Inventory Health - Medium width */}
                     <div
-                        className="lg:col-span-6 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
+                        className="lg:col-span-7 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
                         <InventoryHealthChart/>
                     </div>
 

@@ -36,7 +36,7 @@ export default function ShipmentStatusDurationChart() {
                     <XAxis dataKey="status" />
                     <YAxis label={{ value: 'Hours', angle: -90, position: 'insideLeft' }} />
                     <Tooltip />
-                    <Legend verticalAlign="top" />
+                    <Legend verticalAlign="bottom" />
                     <Bar dataKey="avgHoursInStatus" fill="#3b82f6" name="Avg Hours" />
                     <Bar dataKey="medianHoursInStatus" fill="#f59e0b" name="Median Hours" />
                     <Bar dataKey="p95HoursInStatus" fill="#ef4444" name="95th Percentile Hours" />

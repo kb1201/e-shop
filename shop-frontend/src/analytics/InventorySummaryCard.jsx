@@ -33,12 +33,11 @@ export default function InventoryHealthChart() {
         {name: 'In Stock', value: data.inStockProducts},
         {name: 'Low Stock', value: data.lowStockProducts},
         {name: 'Out of Stock', value: data.outOfStockProducts},
-        {name: 'Discontinued', value: data.discontinuedProducts},
     ];
 
     return (
         <div className="p-6 bg-white rounded-xl shadow max-w-6xl mx-auto">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Warehouse Inventory Health</h2>
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">Inventory Health</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                 <ResponsiveContainer width="100%" height={300}>
