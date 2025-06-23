@@ -55,16 +55,16 @@ const Dashboard = () => {
 
                     {/* Weekly Trends - Takes more space for time series */}
                     <div
-                        className="lg:col-span-8 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
+                        className="lg:col-span-12 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
                         <WeeklyInventoryTrendChart/>
                     </div>
 
                     {/* Shipment Analytics - Compact */}
-                    <div
-                        className="lg:col-span-4 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
-                        <ShipmentStatusDurationChart/>
-
-                    </div>
+                    {/*<div*/}
+                    {/*    className="lg:col-span-4 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">*/}
+                    {/*    <ShipmentStatusDurationChart/>*/}
+                    
+                    {/*</div>*/}
 
                     <div
                         className="lg:col-span-12 bg-white rounded-2xl shadow-lg border border-slate-200 p-6 hover:shadow-xl transition-all duration-300">
