@@ -1,45 +1,144 @@
-# === GLOBAL ===
+# ==================== GLOBAL IGNORES ====================
+# System & OS files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+Icon?
 *.log
 *.tmp
 *.swp
-.DS_Store
-Thumbs.db
+*.swo
+
+# Environment files
 .env
 .env.*
+.venv/
+venv/
 
-# === JAVA / SPRING BOOT ===
-**/target/
-**/.mvn/
-**/.classpath
-**/.project
-**/.settings/
-**/*.iml
+# ==================== BUILD SYSTEMS ====================
+# Java/Gradle
+**/.gradle/
 **/build/
 **/out/
+**/*.iml
 
-# === MAVEN / GRADLE WRAPPERS ===
-**/mvnw
-**/mvnw.cmd
-**/gradlew
-**/gradlew.bat
-**/gradle/
+# Maven
+**/target/
+**/.mvn/
 
-# === NODE / REACT / FRONTEND ===
+# Node/React
 **/node_modules/
 **/dist/
-**/build/
 **/.next/
 **/.turbo/
 **/.eslintcache
 
-# === IDE / EDITORS ===
+# Python
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# ==================== IDE & TOOLING ====================
+# IDEs
 **/.idea/
 **/.vscode/
+**/.settings/
+**/.classpath
+**/.project
 **/.metadata/
+
+# Gradle build output
+/build/
+/*/build/
+
+# Gradle cache and logs
+.gradle/
+gradle-app.setting
+!gradle/wrapper/gradle-wrapper.jar
+
+# Ignore log files
+
+# Ignore IDE files
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+out/
+
+# Eclipse
+.project
+.classpath
+.csettings/
+.settings/
+
+# VS Code
+.vscode/
+
+
+# Java compiled files
+*.class
+
+# Kotlin specific
+*.kotlin_module
+
+# Generated files
+*.jar
+*.war
+*.ear
+
+# Build scans
+/build-scan-data/
+
+# Optional: If you use distribution builds
+/distributions/
+/*/distributions/
+
+# Optional: If you use reports
+/reports/
+/*/reports/
+
+# Optional: If you use test-results
+/test-results/
+/*/test-results/
+
+# Optional: If you use test-results binary
+/test-results-bin/
+/*/test-results-bin/
+
+# Optional: If you use coverage tools
+/coverage/
+/*/coverage/
+jacoco.exec
+
+# Optional: If you use dependency lock files (if you don't check them in)
+*.lockfile
+
+# Include Gradle wrapper
+!gradlew
+!gradlew.bat
+!gradle/wrapper/gradle-wrapper.properties
+
+
+# Editor-specific
 *.sublime-workspace
 *.sublime-project
 
-# === OS FILES ===
-ehthumbs.db
-Icon?
-Desktop.ini
+
+# === Gradle wrapper (keep these) ===
+!gradle/
+!gradle/wrapper/
+
+# === Test reports and coverage ===
+**/test-results/
+**/reports/
+**/coverage/
+
+# === Notebooks or scratch ===
+notebook/*.ipynb
+
+# === Node.js frontend ===
+shop-frontend/node_modules/
+shop-frontend/dist/
+shop-frontend/.env
