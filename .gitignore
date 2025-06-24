@@ -9,6 +9,8 @@ Icon?
 *.tmp
 *.swp
 *.swo
+.idea/
+
 
 # Environment files
 .env
