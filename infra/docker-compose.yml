@@ -12,6 +12,7 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: changeme
       POSTGRES_DB: postgres
+      #used for local development
       POSTGRES_MULTIPLE_DATABASES: catalog,inventory,ordering,user_service,shipment,recommendations
     volumes:
       - pg-data:/var/lib/postgresql/data
