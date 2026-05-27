@@ -2,39 +2,26 @@
   "name": "my-react-app",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "start": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest"
   },
   "dependencies": {
-    "@tailwindcss/vite": "^4.1.5",
     "axios": "^1.8.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.5.0",
     "react-router-dom": "^7.5.1",
-    "react-scripts": "5.0.1",
     "recharts": "^2.15.3",
-    "swiper": "^11.2.6",
-    "vite": "^6.3.4"
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "swiper": "^11.2.6"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.21",
-    "postcss": "^8.5.3",
-    "tailwindcss": "^3.4.17"
+    "@tailwindcss/vite": "^4.1.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^6.3.4",
+    "vitest": "^3.2.2"
   }
 }
