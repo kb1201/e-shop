@@ -12,7 +12,7 @@ export default function ShipmentStatusDurationChart() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await analyticsApi.get('/shipment/status-duration');
+                const response = await analyticsApi.get('/analytics/shipment/status-duration');
                 setData(response.data);
                 setError('');
             } catch {

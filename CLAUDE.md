@@ -10,6 +10,7 @@ An e-commerce platform built with a microservices architecture, including a hybr
 
 | Service | Language | Port | Database |
 |---|---|---|---|
+| `gateway` | Java 17 / Spring Cloud Gateway | 8090 | — |
 | `user` | Java 17 / Spring Boot | 8080 | PostgreSQL `user_service` |
 | `catalog` | Java 17 / Spring Boot | 8081 | PostgreSQL `catalog` |
 | `shipment` | Kotlin / Spring Boot | 8082 | PostgreSQL `shipment` |
@@ -31,6 +32,13 @@ After Debezium is up, register the CDC connectors:
 ```bash
 bash infra/setup-cdc.sh
 ```
+
+### API Gateway (start before the frontend)
+```bash
+cd gateway
+./gradlew bootRun   # listens on http://localhost:8090
+```
+The frontend's `api.js` sends all traffic to port 8090. The gateway routes by path prefix to the appropriate backend service. **Do not add `spring-boot-starter-web` to the gateway** — it uses WebFlux (reactive) via `spring-cloud-starter-gateway`.
 
 ### Java/Kotlin Spring Boot services
 From within each service directory (e.g., `catalog/`, `ordering/`, etc.):
@@ -60,6 +68,20 @@ npm test         # Vitest
 ```
 
 ## Architecture
+
+### API Gateway
+`gateway/` (port 8090) is the single entry point for the frontend. It owns CORS (`globalcors`) and routes by path prefix to backend services. The `DedupeResponseHeader` default filter prevents duplicate CORS headers while per-service `corsCustomizer()` beans are still present. **Routing table:**
+
+| Incoming path | Forwarded to | Notes |
+|---|---|---|
+| `/users/**` | user:8080 | |
+| `/products/**` | catalog:8081 | |
+| `/shipments/**` | shipment:8082 | |
+| `/inventory/**` | inventory:8083 | also catches `/invenotry/**` typo |
+| `/orders/**`, `/cart/**` | ordering:8084 | |
+| `/analytics/**` | analytics:8086 | controller is `@RequestMapping("/analytics")`; no prefix stripping needed |
+
+Every service owns a distinct, unambiguous path prefix both in its controller and in the gateway routing table. No `StripPrefix` or other rewriting filters are needed. The frontend's `analyticsApi` uses `baseURL = GATEWAY_URL` (same as every other Axios instance); calls are explicit, e.g. `analyticsApi.get('/analytics/order/summary')`.
 
 ### Authentication
 The `user` service owns the RSA key pair and issues JWT tokens. All other services validate tokens using only the public key (`public.pem`), which is embedded as a classpath resource in each service. When adding a new service, copy `public.pem` from an existing service.

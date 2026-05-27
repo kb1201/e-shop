@@ -12,7 +12,7 @@ export default function PaymentMethodChart() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await analyticsApi.get("/order/payment");
+                const response = await analyticsApi.get("/analytics/order/payment");
                 setData(response.data);
                 setError(null);
             } catch (err) {

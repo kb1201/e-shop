@@ -10,7 +10,7 @@ export default function OrderStatusFlowChart() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await analyticsApi.get("/order/status");
+                const response = await analyticsApi.get("/analytics/order/status");
                 // Transform data: add a combined label field for display
                 const formatted = response.data.map((d) => ({
                     ...d,

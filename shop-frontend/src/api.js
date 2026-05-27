@@ -1,33 +1,37 @@
 import axios from 'axios';
 
+// Single entry point — all traffic goes through the API gateway.
+// The gateway owns CORS, path-based routing, and (in future) rate limiting.
+const GATEWAY_URL = 'http://localhost:8090';
+
 const userApi = axios.create({
-    baseURL: 'http://localhost:8080',
+    baseURL: GATEWAY_URL,
     withCredentials: true,
 });
 
 const catalogApi = axios.create({
-    baseURL: 'http://localhost:8081',
+    baseURL: GATEWAY_URL,
     withCredentials: true,
 });
 
 const orderApi = axios.create({
-    baseURL: 'http://localhost:8084',
+    baseURL: GATEWAY_URL,
     withCredentials: true,
 });
 
 const shipmentApi = axios.create({
-    baseURL: 'http://localhost:8082',
+    baseURL: GATEWAY_URL,
     withCredentials: true,
 });
 
 const inventoryApi = axios.create({
-    baseURL: 'http://localhost:8083',
+    baseURL: GATEWAY_URL,
     withCredentials: true,
 });
 
 const analyticsApi = axios.create({
-    baseURL: 'http://localhost:8086',
+    baseURL: GATEWAY_URL,
     withCredentials: true,
 });
 
-export {userApi, catalogApi, shipmentApi, orderApi, inventoryApi, analyticsApi};
+export { userApi, catalogApi, shipmentApi, orderApi, inventoryApi, analyticsApi };

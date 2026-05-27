@@ -14,7 +14,7 @@ export default function ShipmentAnalyticsChart() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await analyticsApi.get('/shipment/summary');
+                const response = await analyticsApi.get('/analytics/shipment/summary');
                 setData(response.data);
                 setError('');
             } catch {

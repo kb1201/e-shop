@@ -12,7 +12,7 @@ export default function WarehouseInventoryChart() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await analyticsApi.get('/inventory/warehouse');
+                const response = await analyticsApi.get('/analytics/inventory/warehouse');
                 setData(response.data);
                 setError(null);
             } catch (err) {

@@ -12,7 +12,7 @@ export default function CartAnalyticsChart() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await analyticsApi.get('/cart/summary');
+                const response = await analyticsApi.get('/analytics/cart/summary');
                 setData(response.data);
                 setError('');
             } catch {

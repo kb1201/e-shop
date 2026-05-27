@@ -12,7 +12,7 @@ export default function InventoryHealthChart() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await analyticsApi.get("/inventory/summary");
+                const response = await analyticsApi.get("/analytics/inventory/summary");
                 setData(response.data);
                 setError(null);
             } catch (err) {

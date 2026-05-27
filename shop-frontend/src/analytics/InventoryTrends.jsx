@@ -12,7 +12,7 @@ export default function WeeklyInventoryTrendChart() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await analyticsApi.get('/inventory/weekly');
+                const response = await analyticsApi.get('/analytics/inventory/weekly');
                 setData(response.data.map(item => ({
                     ...item,
                     weekStart: new Date(item.weekStart).toISOString().split('T')[0]

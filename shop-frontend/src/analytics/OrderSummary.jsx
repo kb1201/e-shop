@@ -92,7 +92,7 @@ export default function OrderAnalyticsDashboard() {
     useEffect(() => {
         async function fetchData() {
             try {
-                const response = await analyticsApi.get("/order/summary");
+                const response = await analyticsApi.get("/analytics/order/summary");
                 setData(response.data);
                 setError(null);
             } catch (err) {
