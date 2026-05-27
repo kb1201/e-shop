@@ -1,7 +1,5 @@
 server:
   port: 8084
-debug:
-  true
 spring:
   datasource:
     url: jdbc:postgresql://localhost:45432/ordering
