@@ -1,0 +1,75 @@
+server:
+  port: 8090
+
+spring:
+  cloud:
+    gateway:
+      # ---------------------------------------------------------------------------
+      # CORS — single authoritative location; all services behind this gateway
+      # no longer need their own corsCustomizer() bean.
+      # ---------------------------------------------------------------------------
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "http://localhost:5173"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - PATCH
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+
+      # ---------------------------------------------------------------------------
+      # Default filters applied to every route.
+      #
+      # DedupeResponseHeader: until the per-service corsCustomizer() beans are
+      # removed, backend services may also emit CORS headers.  This filter keeps
+      # only the first value so browsers never see a duplicate
+      # Access-Control-Allow-Origin header (which they reject).
+      # ---------------------------------------------------------------------------
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin, RETAIN_FIRST
+
+      # ---------------------------------------------------------------------------
+      # Route table — every service owns a distinct path prefix; no rewriting.
+      # ---------------------------------------------------------------------------
+      routes:
+        # -- User service (port 8080) ----------------------------------------
+        - id: user-service
+          uri: http://localhost:8080
+          predicates:
+            - Path=/users/**
+
+        # -- Catalog service (port 8081) -------------------------------------
+        - id: catalog-service
+          uri: http://localhost:8081
+          predicates:
+            - Path=/products/**
+
+        # -- Shipment service (port 8082) ------------------------------------
+        - id: shipment-service
+          uri: http://localhost:8082
+          predicates:
+            - Path=/shipments/**
+
+        # -- Inventory service (port 8083) -----------------------------------
+        #    Also catches the existing /invenotry typo in AdminInventoryPage.jsx
+        - id: inventory-service
+          uri: http://localhost:8083
+          predicates:
+            - Path=/inventory/**,/invenotry/**
+
+        # -- Ordering service (port 8084) — orders + cart -------------------
+        - id: ordering-service
+          uri: http://localhost:8084
+          predicates:
+            - Path=/orders/**,/cart/**
+
+        # -- Analytics service (port 8086) ------------------------------------
+        - id: analytics-service
+          uri: http://localhost:8086
+          predicates:
+            - Path=/analytics/**
