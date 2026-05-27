@@ -71,6 +71,16 @@ public class JwtService {
         return authorities;
     }
 
+    public Claims extractAllClaims(String token) {
+        return Jwts
+                .parserBuilder()
+                .setSigningKey(this.publicKey)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+
     public List<String> extractRoles(String token) {
         Claims claims = extractAllClaims(token);
         Object rolesObject = claims.get("roles");
@@ -82,6 +92,7 @@ public class JwtService {
         }
         return List.of();
     }
+
     public String generateToken(UserDetails userDetails) {
         return generateToken(new HashMap<>(), userDetails);
     }
@@ -145,14 +156,6 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    private Claims extractAllClaims(String token) {
-        return Jwts
-                .parserBuilder()
-                .setSigningKey(this.publicKey)
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
-    }
 
     private PrivateKey getPrivateKey(Resource privateKeyResource) {
         try {
