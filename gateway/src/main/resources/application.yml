@@ -23,17 +23,6 @@ spring:
             allowCredentials: true
 
       # ---------------------------------------------------------------------------
-      # Default filters applied to every route.
-      #
-      # DedupeResponseHeader: until the per-service corsCustomizer() beans are
-      # removed, backend services may also emit CORS headers.  This filter keeps
-      # only the first value so browsers never see a duplicate
-      # Access-Control-Allow-Origin header (which they reject).
-      # ---------------------------------------------------------------------------
-      default-filters:
-        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin, RETAIN_FIRST
-
-      # ---------------------------------------------------------------------------
       # Route table — every service owns a distinct path prefix; no rewriting.
       # ---------------------------------------------------------------------------
       routes:
