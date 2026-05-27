@@ -5,6 +5,7 @@ import io.jsonwebtoken.Claims;
 import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -14,6 +15,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -27,26 +29,34 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         this.jwtService = jwtService;
     }
 
+    private String resolveToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        if (request.getCookies() != null) {
+            return Arrays.stream(request.getCookies())
+                    .filter(c -> "token".equals(c.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
+        }
+        return null;
+    }
+
     @Override
     protected void doFilterInternal(
             @NonNull HttpServletRequest request,
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        System.out.println("I am in doFilterInternal =======");
-        final String authHeader = request.getHeader("Authorization");
-        final String jwt;
+        final String jwt = resolveToken(request);
         final String username;
 
-        // Check if Authorization header exists and starts with "Bearer "
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            // No JWT token present, proceed with the filter chain
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
-
-        // Extract the JWT token (remove "Bearer " prefix)
-        jwt = authHeader.substring(7);
 
         try {
             // Extract username from JWT token

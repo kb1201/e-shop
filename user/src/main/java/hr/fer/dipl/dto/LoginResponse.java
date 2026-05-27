@@ -2,6 +2,8 @@ package hr.fer.dipl.dto;
 
 import lombok.*;
 
+import java.util.List;
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -9,10 +11,11 @@ import lombok.*;
 @Builder
 @EqualsAndHashCode
 public class LoginResponse {
-    private String token;
 
     private long expiresIn;
 
     private Long id;
+
+    private List<String> roles;
 
 }

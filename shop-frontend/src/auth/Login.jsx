@@ -21,16 +21,6 @@ const Login = () => {
         });
     };
 
-    function parseJwt(token) {
-        try {
-            const base64Payload = token.split('.')[1];
-            const payload = atob(base64Payload);
-            return JSON.parse(payload);
-        } catch (e) {
-            return null;
-        }
-    }
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
@@ -38,19 +28,12 @@ const Login = () => {
 
         try {
             const response = await userApi.post('/users/login', formData);
-            const {token, id: userId} = response.data;
-            console.log(token)
-            if (token && userId !== undefined) {
-                let roles = parseJwt(token).roles
-                console.log(roles)
-                if (roles && roles.length !== 0) {
-                    let role = roles[0]
-                    login({token, userId, role});
-                    navigate('/');
-                } else {
-                    setError('Login failed. Please check your credentials.');
-                }
-
+            // Token is now in an HttpOnly cookie set by the server — never read here.
+            const { id: userId, roles } = response.data;
+            if (userId !== undefined && roles && roles.length !== 0) {
+                const role = roles[0];
+                login({ userId, role });
+                navigate('/');
             } else {
                 setError('Login failed. Please check your credentials.');
             }

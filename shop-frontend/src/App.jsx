@@ -17,7 +17,6 @@ function App() {
     const [user, setUser] = useState(null);
 
     const handleLogout = () => {
-        localStorage.removeItem('token');
         setUser(null);
     };
 

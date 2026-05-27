@@ -1,26 +1,29 @@
 import { createContext, useState, useEffect } from 'react';
+import { userApi } from '../api';
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [token, setToken] = useState(localStorage.getItem('token'));
+    // Token lives in an HttpOnly cookie — JS never touches it.
+    // Only non-sensitive identifiers are kept in localStorage.
     const [userId, setUserId] = useState(localStorage.getItem('userId'));
     const [userRole, setUserRole] = useState(localStorage.getItem('userRole'));
 
-    const login = ({ token: newToken, userId: newUserId, role: newRole }) => {
-        localStorage.setItem('token', newToken);
+    const login = ({ userId: newUserId, role: newRole }) => {
         localStorage.setItem('userId', newUserId);
         localStorage.setItem('userRole', newRole);
-        setToken(newToken);
         setUserId(newUserId);
         setUserRole(newRole);
     };
 
-    const logout = () => {
-        localStorage.removeItem('token');
+    const logout = async () => {
+        try {
+            await userApi.post('/users/logout');
+        } catch (_) {
+            // best-effort — clear client state regardless
+        }
         localStorage.removeItem('userId');
         localStorage.removeItem('userRole');
-        setToken(null);
         setUserId(null);
         setUserRole(null);
     };
@@ -35,7 +38,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const isAdmin = () => {
-        return userRole === 'ROLE_ADMIN' || userRole === 'role_admin' || userRole === "ADMIN";
+        return userRole === 'ROLE_ADMIN' || userRole === 'role_admin' || userRole === 'ADMIN';
     };
 
     const isModerator = () => {
@@ -43,21 +46,17 @@ export const AuthProvider = ({ children }) => {
     };
 
     const isAuthenticated = () => {
-        return !!token && !!userId;
+        return !!userId;
     };
 
     useEffect(() => {
-        const storedToken = localStorage.getItem('token');
         const storedUserId = localStorage.getItem('userId');
         const storedUserRole = localStorage.getItem('userRole');
-
-        if (storedToken) setToken(storedToken);
         if (storedUserId) setUserId(storedUserId);
         if (storedUserRole) setUserRole(storedUserRole);
     }, []);
 
     const contextValue = {
-        token,
         userId,
         userRole,
         login,

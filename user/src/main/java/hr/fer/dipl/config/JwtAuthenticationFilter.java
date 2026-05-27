@@ -5,6 +5,7 @@ import hr.fer.dipl.service.JwtService;
 import io.micrometer.common.lang.NonNull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -17,6 +18,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
@@ -40,17 +42,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        final String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String jwt = resolveToken(request);
+
+        if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
-            final String jwt = authHeader.substring(7);
             final String userEmail = jwtService.extractUsername(jwt);
-
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
             if (userEmail != null && authentication == null) {
@@ -62,13 +63,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             null,
                             userDetails.getAuthorities()
                     );
-
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 } else {
                     throw new UnauthorizedException("Invalid JWT token");
                 }
-
             } else if (userEmail == null) {
                 throw new UnauthorizedException("Could not extract user from JWT token");
             }
@@ -77,5 +76,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (Exception exception) {
             handlerExceptionResolver.resolveException(request, response, null, exception);
         }
+    }
+
+    private String resolveToken(HttpServletRequest request) {
+        // 1. Try Authorization: Bearer <token> header
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        // 2. Fall back to HttpOnly cookie
+        if (request.getCookies() != null) {
+            return Arrays.stream(request.getCookies())
+                    .filter(c -> "token".equals(c.getName()))
+                    .map(Cookie::getValue)
+                    .findFirst()
+                    .orElse(null);
+        }
+        return null;
     }
 }

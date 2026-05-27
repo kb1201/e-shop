@@ -49,7 +49,7 @@ public class WebSecurityConfiguration {
     public Customizer<CorsConfigurer<HttpSecurity>> corsCustomizer() {
         return corsConfigurer -> {
             CorsConfiguration corsConfiguration = new CorsConfiguration();
-            corsConfiguration.addAllowedOrigin("http://localhost:3000");
+            corsConfiguration.addAllowedOrigin("http://localhost:5173");
             corsConfiguration.addAllowedMethod("*");
             corsConfiguration.addAllowedHeader("*");
             corsConfiguration.setAllowCredentials(true);

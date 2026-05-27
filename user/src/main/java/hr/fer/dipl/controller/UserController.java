@@ -6,6 +6,8 @@ import hr.fer.dipl.dto.UserRequest;
 import hr.fer.dipl.dto.UserResponse;
 import hr.fer.dipl.service.AuthService;
 import hr.fer.dipl.service.UserService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -31,9 +33,31 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> authenticate(@RequestBody UserRequest loginUserDto) {
-        var loginResponse = authService.login(loginUserDto.getUsername(), loginUserDto.getPassword());
+    public ResponseEntity<LoginResponse> authenticate(
+            @RequestBody UserRequest loginUserDto,
+            HttpServletResponse servletResponse) {
+
+        String token = authService.generateToken(loginUserDto.getUsername(), loginUserDto.getPassword());
+        LoginResponse loginResponse = authService.login(loginUserDto.getUsername(), loginUserDto.getPassword());
+
+        Cookie cookie = new Cookie("token", token);
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge((int) (loginResponse.getExpiresIn() / 1000));
+        // cookie.setSecure(true); // enable in production (HTTPS)
+        servletResponse.addCookie(cookie);
+
         return ResponseEntity.ok(loginResponse);
+    }
+
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletResponse servletResponse) {
+        Cookie cookie = new Cookie("token", "");
+        cookie.setHttpOnly(true);
+        cookie.setPath("/");
+        cookie.setMaxAge(0);
+        servletResponse.addCookie(cookie);
+        return ResponseEntity.noContent().build();
     }
 
 }

@@ -64,12 +64,7 @@ const ShipmentAdmin = () => {
 
     const fetchShipmentDetails = async (shipmentId) => {
         try {
-            const response = await shipmentApi.get(`/shipments/${shipmentId}`, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                    'Content-Type': 'application/json'
-                }
-            });
+            const response = await shipmentApi.get(`/shipments/${shipmentId}`);
 
             const data = response.data;
             setSelectedShipment(data);
@@ -82,16 +77,7 @@ const ShipmentAdmin = () => {
     const updateShipmentStatus = async (shipmentId, status) => {
         setUpdatingStatus(true);
         try {
-            // Fixed: Use proper axios API call instead of mixing fetch and axios
-            const response = await shipmentApi.patch(`/shipments/${shipmentId}/status`,
-                {status}, // Send status in request body
-                {
-                    headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
+            const response = await shipmentApi.patch(`/shipments/${shipmentId}/status`, {status});
 
             const updatedShipment = response.data;
 
