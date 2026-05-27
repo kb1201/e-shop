@@ -23,6 +23,41 @@ import java.security.spec.X509EncodedKeySpec;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Gateway-level JWT authentication filter — the <em>primary</em> auth boundary.
+ *
+ * <h3>What this filter does</h3>
+ * <ol>
+ *   <li>Strips any client-supplied {@code X-User-Id} / {@code X-User-Role} headers
+ *       to prevent spoofing.</li>
+ *   <li>Validates the JWT (from {@code Authorization: Bearer} header or {@code token}
+ *       cookie) using the RSA public key.</li>
+ *   <li>On success: injects {@code X-User-Id} and {@code X-User-Role} headers for
+ *       downstream services and <strong>forwards the original {@code Authorization}
+ *       header unchanged</strong> — Spring Cloud Gateway passes all non-sensitive
+ *       headers by default, so no extra configuration is needed.</li>
+ *   <li>On failure / missing token: returns {@code 401} unless the path is in the
+ *       public-path table below.</li>
+ * </ol>
+ *
+ * <h3>Defense in depth</h3>
+ * Each downstream service runs its own {@code JwtAuthenticationFilter} that
+ * re-validates the forwarded {@code Authorization} header.  This means a request
+ * that somehow bypasses the gateway (e.g., direct port access during development)
+ * must still carry a valid JWT to be authenticated.  The {@code X-User-Id} /
+ * {@code X-User-Role} headers are used only as a <em>fallback</em> when no JWT is
+ * present — see {@code JwtAuthenticationFilter} in each service.
+ *
+ * <h3>Public paths (no JWT required)</h3>
+ * Defined in {@link #isPublicPath}:
+ * <ul>
+ *   <li>{@code POST /users} — sign-up</li>
+ *   <li>{@code POST /users/login}</li>
+ *   <li>{@code POST /users/logout}</li>
+ *   <li>All non-POST {@code /products/**} — catalog browsing</li>
+ *   <li>{@code OPTIONS /**} — CORS preflight</li>
+ * </ul>
+ */
 @Component
 public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
 

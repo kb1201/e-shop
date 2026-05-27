@@ -19,6 +19,8 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.*;
 import java.util.function.Function;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 @Service
 public class JwtService {
@@ -44,6 +46,29 @@ public class JwtService {
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
         final Claims claims = extractAllClaims(token);
         return claimsResolver.apply(claims);
+    }
+
+    public Long extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        Object raw = claims.get("userId");
+        if (raw instanceof Integer) return ((Integer) raw).longValue();
+        if (raw instanceof Long)    return (Long) raw;
+        return null;
+    }
+
+    public Collection<? extends GrantedAuthority> getAuthorities(Claims claims) {
+        List<GrantedAuthority> authorities = new ArrayList<>();
+        try {
+            Object roles = claims.get("roles");
+            if (roles instanceof List<?>) {
+                for (Object role : (List<?>) roles) {
+                    if (role instanceof String) {
+                        authorities.add(new SimpleGrantedAuthority((String) role));
+                    }
+                }
+            }
+        } catch (Exception ignored) { /* fallback: empty list */ }
+        return authorities;
     }
 
     public List<String> extractRoles(String token) {
@@ -74,9 +99,23 @@ public class JwtService {
         return buildToken(extraClaims, userDetails, jwtExpiration);
     }
 
+    /** Full validation against a known UserDetails (used during login). */
     public boolean isTokenValid(String token, UserDetails userDetails) {
         final String username = extractUsername(token);
         return (username.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    }
+
+    /**
+     * Signature + expiry validation without a DB lookup.
+     * Used by {@link hr.fer.dipl.config.JwtAuthenticationFilter} as defense-in-depth
+     * on every incoming request — no round-trip to the user table required.
+     */
+    public boolean isTokenValid(String token) {
+        try {
+            return !isTokenExpired(token);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     public long getExpirationTime() {
