@@ -1,8 +1,7 @@
 package hr.fer.dipl.controller;
 
 import hr.fer.dipl.dto.CartItemDTO;
-import hr.fer.dipl.service.CartServiceImpl;
-import hr.fer.dipl.service.OrderServiceImpl;
+import hr.fer.dipl.service.CartService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -15,10 +14,10 @@ import java.util.List;
 @RequestMapping
 public class CartController {
 
-    private final CartServiceImpl cartService;
+    private final CartService cartService;
 
     @Autowired
-    public CartController(CartServiceImpl service) {
+    public CartController(CartService service) {
         this.cartService = service;
     }
 

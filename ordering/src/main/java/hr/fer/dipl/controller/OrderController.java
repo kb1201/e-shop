@@ -3,7 +3,7 @@ package hr.fer.dipl.controller;
 import hr.fer.dipl.dto.CartItemDTO;
 import hr.fer.dipl.dto.OrderDTO;
 import hr.fer.dipl.dto.OrderRequest;
-import hr.fer.dipl.service.OrderServiceImpl;
+import hr.fer.dipl.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,10 +16,10 @@ import java.util.List;
 @RequestMapping
 public class OrderController {
 
-    private final OrderServiceImpl orderService;
+    private final OrderService orderService;
 
     @Autowired
-    public OrderController(OrderServiceImpl orderService) {
+    public OrderController(OrderService orderService) {
         this.orderService = orderService;
     }
 

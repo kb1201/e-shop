@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-public class CartServiceImpl  {
+public class CartServiceImpl implements CartService {
 
     private final CartItemRepository cartItemRepository;
     private final InventoryClient inventoryClient;
@@ -37,6 +37,7 @@ public class CartServiceImpl  {
         this.catalogClient = catalogClient;
     }
 
+    @Override
     public List<CartItemDTO> getCartItems() {
         Long userId = securityUtils.getCurrentUserId();
         List<CartItem> cartItems = cartItemRepository.findByUserId(userId);
@@ -46,6 +47,7 @@ public class CartServiceImpl  {
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional
     public CartItemDTO addToCart(CartItemDTO cartItemDTO) {
         Long userId = securityUtils.getCurrentUserId();
@@ -90,6 +92,7 @@ public class CartServiceImpl  {
         }
     }
 
+    @Override
     @Transactional
     public void removeFromCart(Long cartItemId) {
         Long userId = securityUtils.getCurrentUserId();
@@ -105,6 +108,7 @@ public class CartServiceImpl  {
         }
     }
 
+    @Override
     @Transactional
     public CartItemDTO updateCartItem(Long cartItemId, CartItemDTO cartItemDTO) {
         Long userId = securityUtils.getCurrentUserId();
@@ -146,16 +150,19 @@ public class CartServiceImpl  {
         }
     }
 
+    @Override
     @Transactional
     public void clearCart() {
         Long userId = securityUtils.getCurrentUserId();
         clearCartForUser(userId);
     }
 
+    @Override
     public List<CartItem> getCartItemsForUser(Long userId) {
         return cartItemRepository.findByUserId(userId);
     }
 
+    @Override
     @Transactional
     public void clearCartForUser(Long userId) {
         cartItemRepository.deleteByUserId(userId);

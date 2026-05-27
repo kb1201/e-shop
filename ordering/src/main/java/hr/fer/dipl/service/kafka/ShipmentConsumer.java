@@ -2,7 +2,7 @@ package hr.fer.dipl.service.kafka;
 
 import hr.fer.dipl.db.model.OrderStatus;
 import hr.fer.dipl.dto.ShipmentDTO;
-import hr.fer.dipl.service.OrderServiceImpl;
+import hr.fer.dipl.service.OrderService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -12,10 +12,10 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class ShipmentConsumer {
 
-    private final OrderServiceImpl orderService;
+    private final OrderService orderService;
 
-    //@Autowired
-    public ShipmentConsumer(OrderServiceImpl orderService) {
+    @Autowired
+    public ShipmentConsumer(OrderService orderService) {
         this.orderService = orderService;
     }
 

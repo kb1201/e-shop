@@ -20,7 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
-public class InventoryServiceImpl {
+public class InventoryServiceImpl implements InventoryService {
 
     private final InventoryRepository inventoryRepository;
     private final ProductCatalogClient productCatalogClient;
@@ -32,18 +32,21 @@ public class InventoryServiceImpl {
     }
 
 
+    @Override
     public InventoryDTO getInventoryByProductId(Long productId) {
         Inventory inventory = inventoryRepository.findByProductId(productId)
                 .orElseThrow(() -> new InventoryException("Inventory not found for product ID: " + productId));
         return convertToDTO(inventory);
     }
 
+    @Override
     public InventoryDTO getInventoryBySku(String sku) {
         Inventory inventory = inventoryRepository.findBySku(sku)
                 .orElseThrow(() -> new InventoryException("Inventory not found for SKU: " + sku));
         return convertToDTO(inventory);
     }
 
+    @Override
     public Page<InventoryDTO> getInventory(Pageable pageable) {
         Page<Inventory> inventoryPage = inventoryRepository.findAll(pageable);
 
@@ -74,17 +77,20 @@ public class InventoryServiceImpl {
         }
     }
 
+    @Override
     public Page<InventoryDTO> getInventoryByStatus(InventoryStatus status, Pageable pageable) {
         return inventoryRepository.findByStatus(status, pageable)
                 .map(this::convertToDTO);
     }
 
+    @Override
     public List<InventoryDTO> getItemsNeedingRestock() {
         return inventoryRepository.findItemsNeedingRestock().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
+    @Override
     @Transactional
     public InventoryDTO createInventory(InventoryDTO inventoryDTO) {
         // Check if inventory already exists for this product
@@ -104,6 +110,7 @@ public class InventoryServiceImpl {
         return convertToDTO(savedInventory);
     }
 
+    @Override
     @Transactional
     public InventoryDTO updateInventory(Long id, InventoryDTO inventoryDTO) {
         Inventory inventory = inventoryRepository.findById(id)
@@ -131,6 +138,7 @@ public class InventoryServiceImpl {
 
     }
 
+    @Override
     @Transactional(readOnly = true)
     public boolean checkAvailability(Long productId, int quantity) {
         Inventory inventory = inventoryRepository.findByProductId(productId)
@@ -140,6 +148,7 @@ public class InventoryServiceImpl {
     }
 
 
+    @Override
     @Transactional
     public void reserveInventory(Long productId, int quantity) {
         Inventory inventory = inventoryRepository.findByProductIdWithLock(productId)
@@ -155,6 +164,7 @@ public class InventoryServiceImpl {
     }
 
 
+    @Override
     @Transactional
     public void releaseReservation(Long productId, int quantity) {
         Inventory inventory = inventoryRepository.findByProductIdWithLock(productId)
@@ -166,6 +176,7 @@ public class InventoryServiceImpl {
     }
 
 
+    @Override
     @Transactional
     public void commitReservation(Long productId, int quantity) {
         Inventory inventory = inventoryRepository.findByProductIdWithLock(productId)
@@ -177,6 +188,7 @@ public class InventoryServiceImpl {
     }
 
 
+    @Override
     @Transactional
     public InventoryDTO restockInventory(Long productId, int quantity) {
         Inventory inventory = inventoryRepository.findByProductIdWithLock(productId)
@@ -186,6 +198,7 @@ public class InventoryServiceImpl {
         return convertToDTO(inventoryRepository.save(inventory));
     }
 
+    @Override
     @Transactional
     public void deleteInventory(Long id) {
         if (!inventoryRepository.existsById(id)) {

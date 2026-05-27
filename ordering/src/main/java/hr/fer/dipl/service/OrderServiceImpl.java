@@ -28,7 +28,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class OrderServiceImpl {
+public class OrderServiceImpl implements OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderItemRepository orderItemRepository;
@@ -37,7 +37,7 @@ public class OrderServiceImpl {
     private final OrderEventProducer orderEventProducer;
 
     private final UserProductProducer userProductProducer;
-    private final CartServiceImpl cartService;
+    private final CartService cartService;
 
     @Autowired
     public OrderServiceImpl(
@@ -47,7 +47,7 @@ public class OrderServiceImpl {
             SecurityUtils securityUtils,
             OrderEventProducer orderEventProducer,
             UserProductProducer userProductProducer,
-            CartServiceImpl cartService) {
+            CartService cartService) {
         this.orderRepository = orderRepository;
         this.orderItemRepository = orderItemRepository;
         this.inventoryClient = inventoryClient;
@@ -57,6 +57,7 @@ public class OrderServiceImpl {
         this.cartService = cartService;
     }
 
+    @Override
     @Transactional
     public OrderDTO createOrder(OrderRequest orderRequest) {
         Long userId = securityUtils.getCurrentUserId();
@@ -115,6 +116,7 @@ public class OrderServiceImpl {
         userProductProducer.sendUserProductEvent(orderDTO);
     }
 
+    @Override
     public OrderDTO getOrderById(Long orderId) {
         Long userId = securityUtils.getCurrentUserId();
         Order order = orderRepository.findByIdAndUserId(orderId, userId)
@@ -124,6 +126,7 @@ public class OrderServiceImpl {
         return DtoMapper.toOrderDTO(order, orderItems);
     }
 
+    @Override
     public List<OrderDTO> getAllOrders() {
         List<Order> orders = orderRepository.findAll();
         List<OrderDTO> orderDTOs = new ArrayList<>();
@@ -136,6 +139,7 @@ public class OrderServiceImpl {
         return orderDTOs;
     }
 
+    @Override
     public List<OrderDTO> getOrdersByUserId(Long userId) {
         if (!securityUtils.getCurrentUserId().equals(userId)) {
             throw new SecurityException("Unauthorized access");
@@ -153,6 +157,7 @@ public class OrderServiceImpl {
     }
 
 
+    @Override
     @Transactional
     public OrderDTO updateOrderStatus(Long orderId, OrderStatus status) {
         Order order = orderRepository.findById(orderId)

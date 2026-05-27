@@ -3,7 +3,7 @@ package hr.fer.dipl.controller;
 import hr.fer.dipl.db.model.InventoryStatus;
 import hr.fer.dipl.dto.InventoryDTO;
 import hr.fer.dipl.dto.InventoryRequest;
-import hr.fer.dipl.service.InventoryServiceImpl;
+import hr.fer.dipl.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -19,10 +19,10 @@ import java.util.List;
 @RequestMapping("/inventory")
 public class InventoryController {
 
-    private final InventoryServiceImpl inventoryService;
+    private final InventoryService inventoryService;
 
     @Autowired
-    public InventoryController(InventoryServiceImpl inventoryService) {
+    public InventoryController(InventoryService inventoryService) {
         this.inventoryService = inventoryService;
     }
 
