@@ -29,7 +29,6 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-security")
     implementation("org.springframework.security:spring-security-crypto")
-    implementation("io.jsonwebtoken:jjwt-api:0.11.5")
     implementation("org.springframework.kafka:spring-kafka")
     implementation("com.fasterxml.jackson.core:jackson-databind")
     implementation("org.springframework.boot:spring-boot-starter-cache")
@@ -37,8 +36,6 @@ dependencies {
     implementation("org.apache.commons:commons-math3:3.6.1")
     implementation("org.springframework.cloud:spring-cloud-starter-openfeign")
 
-    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.11.5")
-    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.11.5")
 
     implementation("org.liquibase:liquibase-core")
 

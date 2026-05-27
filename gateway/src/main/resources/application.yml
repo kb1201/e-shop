@@ -1,6 +1,10 @@
 server:
   port: 8090
 
+security:
+  jwt:
+    public-key-path: classpath:public.pem
+
 spring:
   cloud:
     gateway:
