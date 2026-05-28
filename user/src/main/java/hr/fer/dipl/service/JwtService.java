@@ -119,7 +119,7 @@ public class JwtService {
     /**
      * Signature + expiry validation without a DB lookup.
      * Used by {@link hr.fer.dipl.config.JwtAuthenticationFilter} as defense-in-depth
-     * on every incoming request — no round-trip to the user table required.
+     * on every incoming request â€” no round-trip to the user table required.
      */
     public boolean isTokenValid(String token) {
         try {

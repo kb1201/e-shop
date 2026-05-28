@@ -1,4 +1,4 @@
-﻿package hr.fer.dipl.config;
+package hr.fer.dipl.config;
 
 import hr.fer.dipl.service.JwtService;
 import io.jsonwebtoken.Claims;
@@ -24,15 +24,15 @@ import java.util.stream.Collectors;
 /**
  * Two-layer authentication filter providing defense in depth.
  *
- * <p><b>Layer 1 â€” JWT validation (direct-access protection):</b><br>
+ * <p><b>Layer 1 Ă˘â‚¬â€ť JWT validation (direct-access protection):</b><br>
  * If the request carries an {@code Authorization: Bearer <token>} header or a
  * {@code token} cookie, the token is validated locally using the RSA public key.
  * A valid token sets the security context from its own claims.
- * An <em>invalid</em> token short-circuits here â€” it does <em>not</em> fall
+ * An <em>invalid</em> token short-circuits here Ă˘â‚¬â€ť it does <em>not</em> fall
  * through to the header layer, preventing an attacker from bypassing validation
  * by deliberately sending a bad token alongside forged headers.
  *
- * <p><b>Layer 2 â€” Trusted gateway headers (normal gateway path):</b><br>
+ * <p><b>Layer 2 Ă˘â‚¬â€ť Trusted gateway headers (normal gateway path):</b><br>
  * Reached only when <em>no JWT is present at all</em>.  The API Gateway
  * ({@code JwtAuthenticationGlobalFilter}) validates the token once, strips any
  * client-supplied {@code X-User-Id}/{@code X-User-Role} headers, and re-injects
@@ -63,7 +63,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String jwt = resolveToken(request);
 
         if (jwt != null) {
-            // --- Layer 1: JWT present â€” validate it ---
+            // --- Layer 1: JWT present Ă˘â‚¬â€ť validate it ---
             // Do NOT fall through to Layer 2 when the token is invalid; that would
             // let an attacker force the header path by sending a deliberately bad token.
             if (jwtService.isTokenValid(jwt)
@@ -77,11 +77,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(userId, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 } catch (Exception ignored) {
-                    // Parsing failed after isTokenValid â€” leave context empty
+                    // Parsing failed after isTokenValid Ă˘â‚¬â€ť leave context empty
                 }
             }
         } else {
-            // --- Layer 2: No JWT â€” trust gateway-injected headers ---
+            // --- Layer 2: No JWT Ă˘â‚¬â€ť trust gateway-injected headers ---
             // The gateway strips client-supplied copies of these headers before
             // injecting its own, so this path is safe when services sit behind it.
             String userIdHeader = request.getHeader("X-User-Id");
@@ -105,7 +105,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             new UsernamePasswordAuthenticationToken(userId, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(auth);
                 } catch (NumberFormatException ignored) {
-                    // Malformed header â€” stay anonymous
+                    // Malformed header Ă˘â‚¬â€ť stay anonymous
                 }
             }
         }
@@ -114,7 +114,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     // -------------------------------------------------------------------------
-    // Token resolution: Authorization: Bearer <token>  â†’  fallback: "token" cookie
+    // Token resolution: Authorization: Bearer <token>  Ă˘â€ â€™  fallback: "token" cookie
     // -------------------------------------------------------------------------
     private String resolveToken(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");

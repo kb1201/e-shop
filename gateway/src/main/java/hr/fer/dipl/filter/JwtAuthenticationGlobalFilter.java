@@ -24,7 +24,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Gateway-level JWT authentication filter — the <em>primary</em> auth boundary.
+ * Gateway-level JWT authentication filter â€” the <em>primary</em> auth boundary.
  *
  * <h3>What this filter does</h3>
  * <ol>
@@ -34,7 +34,7 @@ import java.util.Optional;
  *       cookie) using the RSA public key.</li>
  *   <li>On success: injects {@code X-User-Id} and {@code X-User-Role} headers for
  *       downstream services and <strong>forwards the original {@code Authorization}
- *       header unchanged</strong> — Spring Cloud Gateway passes all non-sensitive
+ *       header unchanged</strong> â€” Spring Cloud Gateway passes all non-sensitive
  *       headers by default, so no extra configuration is needed.</li>
  *   <li>On failure / missing token: returns {@code 401} unless the path is in the
  *       public-path table below.</li>
@@ -46,16 +46,16 @@ import java.util.Optional;
  * that somehow bypasses the gateway (e.g., direct port access during development)
  * must still carry a valid JWT to be authenticated.  The {@code X-User-Id} /
  * {@code X-User-Role} headers are used only as a <em>fallback</em> when no JWT is
- * present — see {@code JwtAuthenticationFilter} in each service.
+ * present â€” see {@code JwtAuthenticationFilter} in each service.
  *
  * <h3>Public paths (no JWT required)</h3>
  * Defined in {@link #isPublicPath}:
  * <ul>
- *   <li>{@code POST /users} — sign-up</li>
+ *   <li>{@code POST /users} â€” sign-up</li>
  *   <li>{@code POST /users/login}</li>
  *   <li>{@code POST /users/logout}</li>
- *   <li>All non-POST {@code /products/**} — catalog browsing</li>
- *   <li>{@code OPTIONS /**} — CORS preflight</li>
+ *   <li>All non-POST {@code /products/**} â€” catalog browsing</li>
+ *   <li>{@code OPTIONS /**} â€” CORS preflight</li>
  * </ul>
  */
 @Component
@@ -90,7 +90,7 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
                 })
                 .build();
 
-        // CORS preflight — always pass through, no auth needed
+        // CORS preflight â€” always pass through, no auth needed
         if (HttpMethod.OPTIONS.equals(method)) {
             return chain.filter(exchange.mutate().request(sanitized).build());
         }
@@ -123,7 +123,7 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
     }
 
     // ---------------------------------------------------------------------------
-    // Public-path table — the single authoritative list of unauthenticated routes
+    // Public-path table â€” the single authoritative list of unauthenticated routes
     // ---------------------------------------------------------------------------
     private boolean isPublicPath(String path, HttpMethod method) {
         if (HttpMethod.POST.equals(method) && "/users".equals(path))        return true; // signup
@@ -134,7 +134,7 @@ public class JwtAuthenticationGlobalFilter implements GlobalFilter, Ordered {
     }
 
     // ---------------------------------------------------------------------------
-    // Token resolution: Authorization: Bearer <token>  →  fallback: "token" cookie
+    // Token resolution: Authorization: Bearer <token>  â†’  fallback: "token" cookie
     // ---------------------------------------------------------------------------
     private Optional<String> resolveToken(ServerHttpRequest request) {
         String authHeader = request.getHeaders().getFirst("Authorization");

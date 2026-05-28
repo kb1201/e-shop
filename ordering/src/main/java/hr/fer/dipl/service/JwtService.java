@@ -1,4 +1,4 @@
-﻿package hr.fer.dipl.service;
+package hr.fer.dipl.service;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
