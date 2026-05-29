@@ -1,83 +1,113 @@
 name: infra
 
 services:
+  # ─────────────────────────────────────────
+  # Database
+  # ─────────────────────────────────────────
   db:
     image: postgres:14.5
     container_name: db
     restart: unless-stopped
     ports:
       - "45432:5432"
-    command: [ 'postgres', '-c', 'log_statement=all', '-c', 'max_connections=500', '-c', 'listen_addresses=0.0.0.0', '-c', 'wal_level=logical', '-c', 'max_replication_slots=4', '-c', 'max_wal_senders=4' ]
+    command: >
+      postgres
+        -c log_statement=all
+        -c max_connections=500
+        -c listen_addresses=0.0.0.0
+        -c wal_level=logical
+        -c max_replication_slots=4
+        -c max_wal_senders=4
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: changeme
       POSTGRES_DB: postgres
-      #used for local development
+      # Used for local development — handled by create-dbs.sh
       POSTGRES_MULTIPLE_DATABASES: catalog,inventory,ordering,user_service,shipment,recommendations
     volumes:
-      - pg-data:/var/lib/postgresql/data
+      - pg-data-e-shop:/var/lib/postgresql/data
       - ./db/create-dbs.sh:/docker-entrypoint-initdb.d/create-dbs.sh
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     networks:
-      local_network:
+      - local_network
 
-  zookeeper:
-    image: docker.io/bitnami/zookeeper:3.8
-    ports:
-      - "12181:2181"
-    environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
-    networks:
-      local_network:
-
+  # ─────────────────────────────────────────
+  # Kafka (KRaft mode — no ZooKeeper needed)
+  # Official Apache image; bitnami tags drifted off Docker Hub to GHCR.
+  # apache/kafka env vars use KAFKA_* (no KAFKA_CFG_ prefix).
+  # ─────────────────────────────────────────
   kafka:
-    image: docker.io/bitnami/kafka:3.4
+    image: apache/kafka:3.9.0
+    container_name: kafka
+    restart: unless-stopped
     ports:
-      - "19093:9093"
-      - "19092:9092"
+      - "19092:9092"  # PLAINTEXT — used by other containers on the Docker network
+      - "19093:9093"  # EXTERNAL  — used by clients on the host machine
     environment:
-      - KAFKA_ENABLE_KRAFT=no
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT,EXTERNAL:PLAINTEXT
-      - KAFKA_CFG_LISTENERS=CLIENT://:9092,EXTERNAL://:9093
-      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092,EXTERNAL://localhost:19093
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      # Increase message size limits to handle large CDC payloads
-      - KAFKA_CFG_MESSAGE_MAX_BYTES=2147483647          # ~2GB max message size
-      - KAFKA_CFG_REPLICA_FETCH_MAX_BYTES=2147483647    # ~2GB replica fetch
-      - KAFKA_CFG_SOCKET_REQUEST_MAX_BYTES=2147483647   # ~2GB socket request
-      # Producer settings
-      - KAFKA_CFG_PRODUCER_MAX_REQUEST_SIZE=2147483647  # ~2GB producer max request
-      # Consumer settings
-      - KAFKA_CFG_CONSUMER_MAX_PARTITION_FETCH_BYTES=2147483647  # ~2GB consumer fetch
-      # Log settings for better performance with large messages
-      - KAFKA_CFG_LOG_SEGMENT_BYTES=1073741824          # 1GB log segments
-      - KAFKA_CFG_LOG_RETENTION_BYTES=10737418240       # 10GB retention
-      # JVM heap settings for handling large messages
-      - KAFKA_HEAP_OPTS=-Xmx2g -Xms2g
-    depends_on:
-      - zookeeper
+      # KRaft: single-node broker + controller combined
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9094
+      # Listeners
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9094,EXTERNAL://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,EXTERNAL://localhost:19093
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      # Required for single-node dev cluster
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      # Message size limits — 64 MB is more than enough for CDC payloads
+      KAFKA_MESSAGE_MAX_BYTES: 67108864
+      KAFKA_REPLICA_FETCH_MAX_BYTES: 67108864
+      KAFKA_SOCKET_REQUEST_MAX_BYTES: 67108864
+      # Log settings
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824    # 1 GB segments
+      KAFKA_LOG_RETENTION_BYTES: 10737418240 # 10 GB total retention
+      KAFKA_HEAP_OPTS: -Xmx1g -Xms512m
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 --list"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     networks:
-      local_network:
+      - local_network
 
+  # ─────────────────────────────────────────
+  # Kafka UI
+  # ─────────────────────────────────────────
   kafka-ui:
+    image: provectuslabs/kafka-ui:v0.7.2
     container_name: kafka-ui
-    image: provectuslabs/kafka-ui:latest
+    restart: unless-stopped
     ports:
-      - 17080:8080
+      - "17080:8080"
     environment:
-      DYNAMIC_CONFIG_ENABLED: true
-    networks:
-      local_network:
+      DYNAMIC_CONFIG_ENABLED: "true"
     volumes:
       - ./kafka/kui/config.yml:/etc/kafkaui/dynamic_config.yaml
     depends_on:
-      - kafka
+      kafka:
+        condition: service_healthy
+    networks:
+      - local_network
 
-  # Debezium Connect for CDC
+  # ─────────────────────────────────────────
+  # Debezium Connect (CDC)
+  # ─────────────────────────────────────────
   debezium-connect:
     image: debezium/connect:2.4
     container_name: debezium-connect
+    restart: unless-stopped
     ports:
       - "48083:8083"
     environment:
@@ -89,75 +119,103 @@ services:
       CONFIG_STORAGE_REPLICATION_FACTOR: 1
       OFFSET_STORAGE_REPLICATION_FACTOR: 1
       STATUS_STORAGE_REPLICATION_FACTOR: 1
-      # Configure for large messages
-      CONNECT_PRODUCER_MAX_REQUEST_SIZE: 1073741824     # 1GB
-      CONNECT_CONSUMER_MAX_PARTITION_FETCH_BYTES: 1073741824  # 1GB
-      CONNECT_CONSUMER_FETCH_MAX_BYTES: 1073741824      # 1GB
-      # REST API configuration
+      # Message size limits — match Kafka's limits above
+      CONNECT_PRODUCER_MAX_REQUEST_SIZE: 67108864
+      CONNECT_CONSUMER_MAX_PARTITION_FETCH_BYTES: 67108864
+      CONNECT_CONSUMER_FETCH_MAX_BYTES: 67108864
+      # REST API
       CONNECT_REST_PORT: 8083
       CONNECT_REST_ADVERTISED_HOST_NAME: debezium-connect
-      # Key/Value converters
+      # Converters
       CONNECT_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: 'false'
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: 'false'
-      # Increase timeouts for large message processing
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      # Timeouts
       CONNECT_TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS: 60000
       CONNECT_OFFSET_FLUSH_TIMEOUT_MS: 10000
       CONNECT_CONSUMER_SESSION_TIMEOUT_MS: 30000
       CONNECT_CONSUMER_HEARTBEAT_INTERVAL_MS: 3000
-      # JVM settings for handling large messages
-      KAFKA_HEAP_OPTS: -Xmx2g -Xms1g
+      KAFKA_HEAP_OPTS: -Xmx1g -Xms512m
     depends_on:
-      - kafka
-      - db
+      kafka:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8083/ || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
     networks:
-      local_network:
+      - local_network
 
-  # ClickHouse for Analytics
+  # ─────────────────────────────────────────
+  # ClickHouse (Analytics)
+  # ─────────────────────────────────────────
   clickhouse:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:24.8   # 24.8 = Aug 2024 LTS
     container_name: clickhouse-server
+    restart: unless-stopped
     ports:
-      - "8123:8123"
-      - "9000:9000"
+      - "8123:8123"  # HTTP
+      - "9000:9000"  # native TCP
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ./clickhouse/init:/docker-entrypoint-initdb.d
     environment:
-      - CLICKHOUSE_DB=analytics
-      - CLICKHOUSE_USER=admin
-      - CLICKHOUSE_PASSWORD=changeme
+      CLICKHOUSE_DB: analytics
+      CLICKHOUSE_USER: admin
+      CLICKHOUSE_PASSWORD: changeme
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8123/ping || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
     networks:
       - local_network
 
-
-  #todo to another compose
-  # Kafka to ClickHouse connector
+  # ─────────────────────────────────────────
+  # Kafka → ClickHouse connector
+  # TODO: move to a separate compose file and build a proper Dockerfile
+  #       (pip install at startup is slow and unreproducible)
+  # ─────────────────────────────────────────
   kafka-clickhouse-connector:
     image: python:3.11-slim
     container_name: kafka-clickhouse-connector
+    restart: unless-stopped
     volumes:
       - ./connectors:/app
     working_dir: /app
     command: >
-      bash -c "
-        pip install kafka-python clickhouse-driver &&
-        python kafka_to_clickhouse.py
-      "
+      bash -c "pip install --no-cache-dir kafka-python clickhouse-driver
+               && python kafka_to_clickhouse.py"
     depends_on:
-      - kafka
-      - clickhouse
+      kafka:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
     networks:
-      local_network:
-    restart: unless-stopped
+      - local_network
 
+  # ─────────────────────────────────────────
+  # Redis
+  # ─────────────────────────────────────────
   redis:
     image: redis:7-alpine
+    container_name: redis
+    restart: unless-stopped
     ports:
       - "46379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
-      local_network:
+      - local_network
 
 networks:
   local_network:
@@ -165,5 +223,6 @@ networks:
     driver: bridge
 
 volumes:
-  pg-data:
+  pg-data-e-shop:
+  kafka-data:
   clickhouse_data:

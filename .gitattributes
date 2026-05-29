@@ -1,0 +1,18 @@
+# Auto-detect text files and enforce LF line endings in the repo
+* text=auto
+
+# Shell scripts must always use LF — Windows CRLF breaks the shebang line inside Linux containers
+*.sh text eol=lf
+
+# Docker / config files
+Dockerfile* text eol=lf
+docker-compose*.yml text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.properties text eol=lf
+*.env text eol=lf
+
+# Windows-native files — keep CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
